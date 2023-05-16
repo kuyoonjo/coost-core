@@ -1,9 +1,10 @@
 
 
 #include "co/co.h"
+#include <iostream>
 DEF_main(argc, argv) {
     go([](){
-        LOG << "hello world";
+        std::cout << "hello world" << std::endl;
     });
     co::sleep(100);
 }

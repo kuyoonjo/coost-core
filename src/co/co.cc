@@ -873,7 +873,7 @@ class pool_impl {
 
 inline void* pool_impl::pop() {
     auto s = gSched;
-    CHECK(s) << "must be called in coroutine..";
+    // CHECK(s) << "must be called in coroutine..";
     auto& v = _pools[s->id()];
     return !v.empty() ? v.pop_back() : (_ccb ? _ccb() : nullptr);
 }
@@ -881,7 +881,7 @@ inline void* pool_impl::pop() {
 inline void pool_impl::push(void* p) {
     if (p) {
         auto s = gSched;
-        CHECK(s) << "must be called in coroutine..";
+        // CHECK(s) << "must be called in coroutine..";
         auto& v = _pools[s->id()];
         (v.size() < _maxcap || !_dcb) ? v.push_back(p) : _dcb(p);
     }
@@ -913,7 +913,7 @@ void pool_impl::clear() {
 
 inline size_t pool_impl::size() const {
     auto s = gSched;
-    CHECK(s) << "must be called in coroutine..";
+    // CHECK(s) << "must be called in coroutine..";
     return _pools[s->id()].size();
 }
 
@@ -1036,7 +1036,7 @@ void wait_group::add(uint32 n) const {
 void wait_group::done() const {
     const auto e = god::cast<xx::event_impl*>(_p);
     const uint32 x = atomic_dec(e->wg(), mo_acq_rel);
-    CHECK(x != (uint32)-1);
+    // CHECK(x != (uint32)-1);
     if (x == 0) e->signal();
 }
 

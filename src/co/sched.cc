@@ -81,7 +81,7 @@ void Sched::main_func(tb_context_from_t from) {
  *       <-------- co->cb->run():  run on _stack
  */
 void Sched::resume(Coroutine* co) {
-    CHECK_EQ(co->sched, this);
+    // CHECK_EQ(co->sched, this);
     tb_context_from_t from;
     Stack* const s = co->stack;
     _running = co;
@@ -95,22 +95,22 @@ void Sched::resume(Coroutine* co) {
         // resume new coroutine
         if (s->co != co) { this->save_stack(s->co); s->co = co; }
         co->ctx = tb_context_make(s->p, _stack_size, main_func);
-        SCHEDLOG << "resume new co: " << co << " id: " << co->id;
+        // SCHEDLOG << "resume new co: " << co << " id: " << co->id;
         from = tb_context_jump(co->ctx, _main_co); // jump to main_func(from):  from.priv == _main_co
 
     } else {
         // remove timer before resume the coroutine
         if (co->it != _timer_mgr.end()) {
-            SCHEDLOG << "del timer: " << co->it;
+            // SCHEDLOG << "del timer: " << co->it;
             _timer_mgr.del_timer(co->it);
             co->it = _timer_mgr.end();
         }
 
         // resume suspended coroutine
-        SCHEDLOG << "resume co: " << co << " id: " <<  co->id << " stack: " << co->buf.size();
+        // SCHEDLOG << "resume co: " << co << " id: " <<  co->id << " stack: " << co->buf.size();
         if (s->co != co) {
             this->save_stack(s->co);
-            CHECK_EQ(s->top, (char*)co->ctx + co->buf.size());
+            // CHECK_EQ(s->top, (char*)co->ctx + co->buf.size());
             memcpy(co->ctx, co->buf.data(), co->buf.size()); // restore stack data
             s->co = co;
         }
@@ -121,7 +121,7 @@ void Sched::resume(Coroutine* co) {
         // yield() was called in the coroutine, update context for it
         assert(_running == from.priv);
         _running->ctx = from.ctx;
-        SCHEDLOG << "yield co: " << _running << " id: " << _running->id;
+        // SCHEDLOG << "yield co: " << _running << " id: " << _running->id;
     } else {
         // the coroutine has terminated, recycle it
         _running->stack->co = 0;
@@ -140,12 +140,12 @@ void Sched::loop() {
         if (_x.stopped) break;
 
         if (unlikely(n == -1)) {
-            if (co::error() != EINTR) ELOG << "epoll wait error: " << co::strerror();
+            // if (co::error() != EINTR) ELOG << "epoll wait error: " << co::strerror();
             continue;
         }
 
         if (_sched_num > 1) timer.restart();
-        SCHEDLOG << "> check I/O tasks ready to resume, num: " << n;
+        // SCHEDLOG << "> check I/O tasks ready to resume, num: " << n;
 
         for (int i = 0; i < n; ++i) {
             auto& ev = (*_x.epoll)[i];
@@ -179,14 +179,14 @@ void Sched::loop() {
           #endif
         }
 
-        SCHEDLOG << "> check tasks ready to resume..";
+        // SCHEDLOG << "> check tasks ready to resume..";
         do {
             _task_mgr.get_all_tasks(new_tasks, ready_tasks);
 
             if (!new_tasks.empty()) {
                 const size_t c = new_tasks.capacity();
                 const size_t s = new_tasks.size();
-                SCHEDLOG << ">> resume new tasks, num: " << s;
+                // SCHEDLOG << ">> resume new tasks, num: " << s;
                 for (size_t i = 0; i < s; ++i) {
                     this->resume(this->new_coroutine(new_tasks[i]));
                 }
@@ -199,7 +199,7 @@ void Sched::loop() {
             if (!ready_tasks.empty()) {
                 const size_t c = ready_tasks.capacity();
                 const size_t s = ready_tasks.size();
-                SCHEDLOG << ">> resume ready tasks, num: " << s;
+                // SCHEDLOG << ">> resume ready tasks, num: " << s;
                 for (size_t i = 0; i < s; ++i) {
                     this->resume(ready_tasks[i]);
                 }
@@ -210,12 +210,12 @@ void Sched::loop() {
             }
         } while (0);
 
-        SCHEDLOG << "> check timedout tasks..";
+        // SCHEDLOG << "> check timedout tasks..";
         do {
             _wait_ms = _timer_mgr.check_timeout(ready_tasks);
 
             if (!ready_tasks.empty()) {
-                SCHEDLOG << ">> resume timedout tasks, num: " << ready_tasks.size();
+                // SCHEDLOG << ">> resume timedout tasks, num: " << ready_tasks.size();
                 _timeout = true;
                 for (size_t i = 0; i < ready_tasks.size(); ++i) {
                     this->resume(ready_tasks[i]);
@@ -390,31 +390,31 @@ int coroutine_id() {
 
 void add_timer(uint32 ms) {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     s->add_timer(ms);
 }
 
 bool add_io_event(sock_t fd, _ev_t ev) {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     return s->add_io_event(fd, ev);
 }
 
 void del_io_event(sock_t fd, _ev_t ev) {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     return s->del_io_event(fd, ev);
 }
 
 void del_io_event(sock_t fd) {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     s->del_io_event(fd);
 }
 
 void yield() {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     s->yield();
 }
 
@@ -430,13 +430,13 @@ void sleep(uint32 ms) {
 
 bool timeout() {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     return s && s->timeout();
 }
 
 bool on_stack(const void* p) {
     const auto s = xx::gSched;
-    CHECK(s) << "MUST be called in coroutine..";
+    // CHECK(s) << "MUST be called in coroutine..";
     return s->on_stack(p);
 }
 

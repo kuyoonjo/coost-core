@@ -2,7 +2,6 @@
 #include "co/atomic.h"
 #include "co/clist.h"
 #include "co/god.h"
-#include "co/log.h"
 #include <mutex>
 
 #ifdef _WIN32
@@ -900,7 +899,7 @@ inline void ThreadAlloc::free(void* p, size_t n) {
 inline void* ThreadAlloc::realloc(void* p, size_t o, size_t n) {
     if (unlikely(!p)) return this->alloc(n);
     if (unlikely(o > g_max_alloc_size)) return ::realloc(p, n);
-    CHECK_LT(o, n) << "realloc error, new size must be greater than old size..";
+    // CHECK_LT(o, n) << "realloc error, new size must be greater than old size..";
 
     if (o <= 2048) {
         const uint32 k = (o > 16 ? god::align_up<16>((uint32)o) : 16);

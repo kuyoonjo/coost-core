@@ -22,7 +22,7 @@ void hook_sleep(bool) {}
 
 DEF_bool(co_hook_log, false, ">>#1 print log for API hooks");
 
-#define HOOKLOG DLOG_IF(FLG_co_hook_log)
+// #define HOOKLOG DLOG_IF(FLG_co_hook_log)
 
 namespace co {
 
@@ -206,7 +206,7 @@ int _hook(socket)(int domain, int type, int protocol) {
       #ifdef SOCK_NONBLOCK
         if (type & SOCK_NONBLOCK) ctx->set_non_blocking(1);
       #endif
-        HOOKLOG << "hook socket, sock: " << s << ", non_block: " << ctx->is_non_blocking();
+        // HOOKLOG << "hook socket, sock: " << s << ", non_block: " << ctx->is_non_blocking();
     }
     return s;
 }
@@ -225,7 +225,7 @@ int _hook(socketpair)(int domain, int type, int protocol, int sv[2]) {
             ctx1->set_non_blocking(1);
         }
       #endif
-        HOOKLOG << "hook socketpair, sock: " << sv[0] << ", " << sv[1] << ", non_block: " << ctx0->is_non_blocking();
+        // HOOKLOG << "hook socketpair, sock: " << sv[0] << ", " << sv[1] << ", non_block: " << ctx0->is_non_blocking();
     }
     return r;
 }
@@ -236,7 +236,7 @@ int _hook(pipe)(int fds[2]) {
     if (r == 0) {
         gHook().get_hook_ctx(fds[0])->set_sock_or_pipe();
         gHook().get_hook_ctx(fds[1])->set_sock_or_pipe();
-        HOOKLOG << "hook pipe, fd: " << fds[0] << ", " << fds[1];
+        // HOOKLOG << "hook pipe, fd: " << fds[0] << ", " << fds[1];
     }
     return r;
 }
@@ -254,7 +254,7 @@ int _hook(pipe2)(int fds[2], int flags) {
             ctx0->set_non_blocking(1);
             ctx1->set_non_blocking(1);
         }
-        HOOKLOG << "hook pipe2, fd: " << fds[0] << ", " << fds[1] << ", non_block: " << nb;
+        // HOOKLOG << "hook pipe2, fd: " << fds[0] << ", " << fds[1] << ", non_block: " << nb;
     }
     return r;
 }
@@ -280,14 +280,14 @@ int _hook(fcntl)(int fd, int cmd, ... /* arg */) {
         if (cmd == F_SETFL) {
             const int nb = !!(v & O_NONBLOCK);
             ctx->set_non_blocking(nb);
-            HOOKLOG << "hook fcntl F_SETFL, fd: " << fd << ", non_block: " << nb;
+            // HOOKLOG << "hook fcntl F_SETFL, fd: " << fd << ", non_block: " << nb;
         } else if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) {
             *gHook().get_hook_ctx(r) = *ctx;
-            HOOKLOG << "hook fcntl F_DUPFD, fd: " << fd << ", r: " << r;
+            // HOOKLOG << "hook fcntl F_DUPFD, fd: " << fd << ", r: " << r;
         }
     }
 
-    HOOKLOG << "hook fcntl cmd: " << cmd << ", fd: " << fd << ", r: " << r;
+    // HOOKLOG << "hook fcntl cmd: " << cmd << ", fd: " << fd << ", r: " << r;
     return r;
 }
 
@@ -321,7 +321,7 @@ int _hook(ioctl)(int fd, co::ioctl_param<ioctl_fp_t>::type request, ...) {
         r = __sys_api(ioctl)(fd, request, arg);
         if (r != -1 && ctx && ctx->is_sock_or_pipe()) {
             ctx->set_non_blocking(nb);
-            HOOKLOG << "hook ioctl FIONBIO, fd: " << fd << ", non_block: " << nb; 
+            // HOOKLOG << "hook ioctl FIONBIO, fd: " << fd << ", non_block: " << nb; 
         }
 
     } else {
@@ -330,7 +330,7 @@ int _hook(ioctl)(int fd, co::ioctl_param<ioctl_fp_t>::type request, ...) {
         r = __sys_api(ioctl)(fd, request, VARG_8_PARAMS);
     }
 
-    HOOKLOG << "hook ioctl, fd: " << fd << ", req: " << request << ", r: " << r;
+    // HOOKLOG << "hook ioctl, fd: " << fd << ", req: " << request << ", r: " << r;
     return r;
 }
 
@@ -345,7 +345,7 @@ int _hook(dup)(int oldfd) {
         }
     }
 
-    HOOKLOG << "hook dup, oldfd: " << oldfd << ", r: " << r;
+    // HOOKLOG << "hook dup, oldfd: " << oldfd << ", r: " << r;
     return r;
 }
 
@@ -358,7 +358,7 @@ int _hook(dup2)(int oldfd, int newfd) {
         *gHook().get_hook_ctx(newfd) = *gHook().get_hook_ctx(oldfd);
     }
 
-    HOOKLOG << "hook dup2, oldfd: " << oldfd << ", newfd: " << newfd << ", r: " << r;
+    // HOOKLOG << "hook dup2, oldfd: " << oldfd << ", newfd: " << newfd << ", r: " << r;
     return r;
 }
 
@@ -372,7 +372,7 @@ int _hook(dup3)(int oldfd, int newfd, int flags) {
         *gHook().get_hook_ctx(newfd) = *gHook().get_hook_ctx(oldfd);
     }
 
-    HOOKLOG << "hook dup3, oldfd: " << oldfd << ", newfd: " << newfd << ", flags: " << flags << ", r: " << r;
+    // HOOKLOG << "hook dup3, oldfd: " << oldfd << ", newfd: " << newfd << ", flags: " << flags << ", r: " << r;
     return r;
 }
 
@@ -385,10 +385,10 @@ int _hook(setsockopt)(int fd, int level, int optname, const void* optval, sockle
         const int64 us = (int64)tv->tv_sec * 1000000 + tv->tv_usec;
         const int ms = (us <= 0 ? 0 : (us > 1000 ? (int)(us / 1000) : 1));
         if (optname == SO_RCVTIMEO) {
-            HOOKLOG << "hook setsockopt, sock: " << fd << ", recv timeout: " << ms;
+            // HOOKLOG << "hook setsockopt, sock: " << fd << ", recv timeout: " << ms;
             gHook().get_hook_ctx(fd)->set_recv_timeout(ms);
         } else {
-            HOOKLOG << "hook setsockopt, sock: " << fd << ", send timeout: " << ms;
+            // HOOKLOG << "hook setsockopt, sock: " << fd << ", send timeout: " << ms;
             gHook().get_hook_ctx(fd)->set_send_timeout(ms);
         }
     }
@@ -408,7 +408,7 @@ int _hook(close)(int fd) {
         r = __sys_api(close)(fd);
     }
 
-    HOOKLOG << "hook close, fd: " << fd << ", r: " << r;
+    // HOOKLOG << "hook close, fd: " << fd << ", r: " << r;
     return r;
 }
 
@@ -436,7 +436,7 @@ int _hook(shutdown)(int fd, int how) {
         r = -1;
     }
 
-    HOOKLOG << "hook shutdown, fd: " << fd << ", how: " << how << ", r: " << r;
+    // HOOKLOG << "hook shutdown, fd: " << fd << ", how: " << how << ", r: " << r;
     return r;
 }
 
@@ -468,7 +468,7 @@ int _hook(connect)(int fd, const struct sockaddr* addr, socklen_t addrlen) {
     if (r == -1 && errno == ETIMEDOUT) errno = EINPROGRESS;
 
   end:
-    HOOKLOG << "hook connect, fd: " << fd << ", r: " << r;
+    // HOOKLOG << "hook connect, fd: " << fd << ", r: " << r;
     return r;
 }
 
@@ -500,7 +500,7 @@ int _hook(accept)(int fd, struct sockaddr* addr, socklen_t* addrlen) {
 
   end:
     if (r != -1) gHook().get_hook_ctx(r)->set_sock_or_pipe();
-    HOOKLOG << "hook accept, fd: " << fd << ", r: " << r;
+    // HOOKLOG << "hook accept, fd: " << fd << ", r: " << r;
     return r;
 }
 
@@ -521,7 +521,7 @@ ssize_t _hook(read)(int fd, void* buf, size_t count) {
     }
 
   end:
-    HOOKLOG << "hook read, fd: " << fd << ", n: " << count << ", r: " << r;
+    // HOOKLOG << "hook read, fd: " << fd << ", n: " << count << ", r: " << r;
     return r;
 }
 
@@ -542,7 +542,7 @@ ssize_t _hook(readv)(int fd, const struct iovec* iov, int iovcnt) {
     }
 
   end:
-    HOOKLOG << "hook readv, fd: " << fd << ", n: " << iovcnt << ", r: " << r;
+    // HOOKLOG << "hook readv, fd: " << fd << ", n: " << iovcnt << ", r: " << r;
     return r;
 }
 
@@ -564,7 +564,7 @@ ssize_t _hook(recv)(int fd, void* buf, size_t len, int flags) {
     }
 
   end:
-    HOOKLOG << "hook recv, fd: " << fd << ", n: " << len << ", r: " << r;
+    // HOOKLOG << "hook recv, fd: " << fd << ", n: " << len << ", r: " << r;
     return r;
 }
 
@@ -586,7 +586,7 @@ ssize_t _hook(recvfrom)(int fd, void* buf, size_t len, int flags, struct sockadd
     }
 
   end:
-    HOOKLOG << "hook recvfrom, fd: " << fd << ", n: " << len << ", r: " << r;
+    // HOOKLOG << "hook recvfrom, fd: " << fd << ", n: " << len << ", r: " << r;
     return r;
 }
 
@@ -608,7 +608,7 @@ ssize_t _hook(recvmsg)(int fd, struct msghdr* msg, int flags) {
     }
 
   end:
-    HOOKLOG << "hook recvmsg, fd: " << fd << ", r: " << r;
+    // HOOKLOG << "hook recvmsg, fd: " << fd << ", r: " << r;
     return r;
 }
 
@@ -629,7 +629,7 @@ ssize_t _hook(write)(int fd, const void* buf, size_t count) {
     }
 
   end:
-    HOOKLOG << "hook write, fd: " << fd << ", n: " << count << ", r: " << r;
+    // HOOKLOG << "hook write, fd: " << fd << ", n: " << count << ", r: " << r;
     return r;
 }
 
@@ -650,7 +650,7 @@ ssize_t _hook(writev)(int fd, const struct iovec* iov, int iovcnt) {
     }
 
   end:
-    HOOKLOG << "hook writev, fd: " << fd << ", n: " << iovcnt << ", r: " << r;
+    // HOOKLOG << "hook writev, fd: " << fd << ", n: " << iovcnt << ", r: " << r;
     return r;
 }
 
@@ -672,7 +672,7 @@ ssize_t _hook(send)(int fd, const void* buf, size_t len, int flags) {
     }
 
   end:
-    HOOKLOG << "hook send, fd: " << fd << ", n: " << len << ", r: " << r;
+    // HOOKLOG << "hook send, fd: " << fd << ", n: " << len << ", r: " << r;
     return r;
 }
 
@@ -694,7 +694,7 @@ ssize_t _hook(sendto)(int fd, const void* buf, size_t len, int flags, const stru
     }
 
   end:
-    HOOKLOG << "hook sendto, fd: " << fd << ", n: " << len << ", r: " << r;
+    // HOOKLOG << "hook sendto, fd: " << fd << ", n: " << len << ", r: " << r;
     return r;
 }
 
@@ -716,7 +716,7 @@ ssize_t _hook(sendmsg)(int fd, const struct msghdr* msg, int flags) {
     }
 
   end:
-    HOOKLOG << "hook sendmsg, fd: " << fd << ", r: " << r;
+    // HOOKLOG << "hook sendmsg, fd: " << fd << ", r: " << r;
     return r;
 }
 
@@ -769,7 +769,7 @@ int _hook(poll)(struct pollfd* fds, nfds_t nfds, int ms) {
     } while (true);
 
   end:
-    HOOKLOG << "hook poll, nfds: " << nfds << ", fd: " << fd << ", ms: " << ms << ", r: " << r;
+    // HOOKLOG << "hook poll, nfds: " << nfds << ", fd: " << fd << ", ms: " << ms << ", r: " << r;
     return r;
 }
 
@@ -830,7 +830,7 @@ int _hook(select)(int nfds, fd_set* rs, fd_set* ws, fd_set* es, struct timeval* 
     }
 
   end:
-    HOOKLOG << "hook select, nfds: " << nfds << ", ms: " << ms << ", r: " << r;
+    // HOOKLOG << "hook select, nfds: " << nfds << ", ms: " << ms << ", r: " << r;
     return r;
 }
 
@@ -848,7 +848,7 @@ unsigned int _hook(sleep)(unsigned int n) {
     r = 0;
 
   end:
-    HOOKLOG << "hook sleep, sec: " << n << ", r: " << r;
+    // HOOKLOG << "hook sleep, sec: " << n << ", r: " << r;
     return r;
 }
 
@@ -868,7 +868,7 @@ int _hook(usleep)(useconds_t us) {
     r = 0;
 
   end:
-    HOOKLOG << "hook usleep, us: " << us << ", r: " << r;
+    // HOOKLOG << "hook usleep, us: " << us << ", r: " << r;
     return r;
 }
 
@@ -903,7 +903,7 @@ int _hook(nanosleep)(const struct timespec* req, struct timespec* rem) {
     r = 0;
 
   end:
-    HOOKLOG << "hook nanosleep, ms: " << ms << ", r: " << r;
+    // HOOKLOG << "hook nanosleep, ms: " << ms << ", r: " << r;
     return r;
 }
 
@@ -925,7 +925,7 @@ int _hook(epoll_wait)(int epfd, struct epoll_event* events, int n, int ms) {
     }
 
   end:
-    HOOKLOG << "hook epoll_wait, fd: " << epfd << ", n: " << n << ", ms: " << ms << ", r: " << r;
+    // HOOKLOG << "hook epoll_wait, fd: " << epfd << ", n: " << n << ", ms: " << ms << ", r: " << r;
     return r;
 }
 
@@ -962,7 +962,7 @@ int _hook(accept4)(int fd, struct sockaddr* addr, socklen_t* addrlen, int flags)
         c->set_sock_or_pipe();
         c->set_non_blocking(flags & SOCK_NONBLOCK);
     }
-    HOOKLOG << "hook accept4, fd: " << fd << ", flags: " << flags << ", r: " << r;
+    // HOOKLOG << "hook accept4, fd: " << fd << ", flags: " << flags << ", r: " << r;
     return r;
 }
 #endif
@@ -973,7 +973,7 @@ int _hook(gethostbyname_r)(
     struct hostent** res, int* err)
 {
     _hook_api(gethostbyname_r);
-    HOOKLOG << "hook gethostbyname_r, name: " << (name ? name : "");
+    // HOOKLOG << "hook gethostbyname_r, name: " << (name ? name : "");
 
     const auto sched = co::xx::gSched;
     if (!sched) return __sys_api(gethostbyname_r)(name, ret, buf, len, res, err);
@@ -988,7 +988,7 @@ int _hook(gethostbyname2_r)(
     struct hostent** res, int* err)
 {
     _hook_api(gethostbyname2_r);
-    HOOKLOG << "hook gethostbyname2_r, name: " << (name ? name : "");
+    // HOOKLOG << "hook gethostbyname2_r, name: " << (name ? name : "");
 
     const auto sched = co::xx::gSched;
     if (!sched) return __sys_api(gethostbyname2_r)(name, af, ret, buf, len, res, err);
@@ -1003,7 +1003,7 @@ int _hook(gethostbyaddr_r)(
     struct hostent** res, int* err)
 {
     _hook_api(gethostbyaddr_r);
-    HOOKLOG << "hook gethostbyaddr_r";
+    // HOOKLOG << "hook gethostbyaddr_r";
 
     const auto sched = co::xx::gSched;
     if (!sched) return __sys_api(gethostbyaddr_r)(addr, addrlen, type, ret, buf, len, res, err);
@@ -1015,7 +1015,7 @@ int _hook(gethostbyaddr_r)(
 #ifdef NETDB_INTERNAL
 struct hostent* _hook(gethostbyname2)(const char* name, int af) {
     _hook_api(gethostbyname2);
-    HOOKLOG << "hook gethostbyname2, name: " << (name ? name : "");
+    // HOOKLOG << "hook gethostbyname2, name: " << (name ? name : "");
 
     const auto sched = co::xx::gSched;
     if (!sched || !name) return __sys_api(gethostbyname2)(name, af);
@@ -1079,10 +1079,10 @@ int _hook(kevent)(int kq, const struct kevent* c, int nc, struct kevent* e, int 
   end:
     if (!c) {
         if (r > 0) fd = (int)e->ident;
-        HOOKLOG << "hook kevent, kq: " << kq << " ne: " << ne << " ms: " << ms << " fd: " << fd << " r: " << r;
+        // HOOKLOG << "hook kevent, kq: " << kq << " ne: " << ne << " ms: " << ms << " fd: " << fd << " r: " << r;
     } else {
         fd = (int)c->ident;
-        HOOKLOG << "hook kevent, kq: " << kq << " nc: " << nc << " fd: " << fd << " r: " << r;
+        // HOOKLOG << "hook kevent, kq: " << kq << " nc: " << nc << " fd: " << fd << " r: " << r;
     }
     return r;
 }
@@ -1090,7 +1090,7 @@ int _hook(kevent)(int kq, const struct kevent* c, int nc, struct kevent* e, int 
 
 struct hostent* _hook(gethostbyname)(const char* name) {
     _hook_api(gethostbyname);
-    HOOKLOG << "hook gethostbyname, name: " << (name ? name : "");
+    // HOOKLOG << "hook gethostbyname, name: " << (name ? name : "");
 
     const auto sched = co::xx::gSched;
     if (!sched) return __sys_api(gethostbyname)(name);
@@ -1106,7 +1106,7 @@ struct hostent* _hook(gethostbyname)(const char* name) {
 
 struct hostent* _hook(gethostbyaddr)(const void* addr, socklen_t len, int type) {
     _hook_api(gethostbyaddr);
-    HOOKLOG << "hook gethostbyaddr";
+    // HOOKLOG << "hook gethostbyaddr";
 
     const auto sched = co::xx::gSched;
     if (!sched) return __sys_api(gethostbyaddr)(addr, len, type);

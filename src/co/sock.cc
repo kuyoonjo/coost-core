@@ -89,7 +89,7 @@ int listen(sock_t fd, int backlog) {
 
 sock_t accept(sock_t fd, void* addr, int* addrlen) {
     const auto sched = xx::gSched;
-    CHECK(sched) << "must be called in coroutine..";
+    // CHECK(sched) << "must be called in coroutine..";
 
     io_event ev(fd, ev_read);
     do {
@@ -115,7 +115,7 @@ sock_t accept(sock_t fd, void* addr, int* addrlen) {
 
 int connect(sock_t fd, const void* addr, int addrlen, int ms) {
     const auto sched = xx::gSched;
-    CHECK(sched) << "must be called in coroutine..";
+    // CHECK(sched) << "must be called in coroutine..";
 
     do {
         int r = __sys_api(connect)(fd, (const sockaddr*)addr, (socklen_t)addrlen);
@@ -140,7 +140,7 @@ int connect(sock_t fd, const void* addr, int addrlen, int ms) {
 
 int recv(sock_t fd, void* buf, int n, int ms) {
     const auto sched = xx::gSched;
-    CHECK(sched) << "must be called in coroutine..";
+    // CHECK(sched) << "must be called in coroutine..";
 
     io_event ev(fd, ev_read);
     do {
@@ -179,7 +179,7 @@ int recvn(sock_t fd, void* buf, int n, int ms) {
 
 int recvfrom(sock_t fd, void* buf, int n, void* addr, int* addrlen, int ms) {
     const auto sched = xx::gSched;
-    CHECK(sched) << "must be called in coroutine..";
+    // CHECK(sched) << "must be called in coroutine..";
 
     io_event ev(fd, ev_read);
     do {
@@ -196,7 +196,7 @@ int recvfrom(sock_t fd, void* buf, int n, void* addr, int* addrlen, int ms) {
 
 int send(sock_t fd, const void* buf, int n, int ms) {
     const auto sched = xx::gSched;
-    CHECK(sched) << "must be called in coroutine..";
+    // CHECK(sched) << "must be called in coroutine..";
 
     const char* p = (const char*) buf;
     int remain = n;
@@ -221,7 +221,7 @@ int send(sock_t fd, const void* buf, int n, int ms) {
 
 int sendto(sock_t fd, const void* buf, int n, const void* addr, int addrlen, int ms) {
     const auto sched = xx::gSched;
-    CHECK(sched) << "must be called in coroutine..";
+    // CHECK(sched) << "must be called in coroutine..";
 
     const char* p = (const char*) buf;
     int remain = n;
