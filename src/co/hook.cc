@@ -20,7 +20,7 @@ void hook_sleep(bool) {}
 #include <errno.h>
 #include <dlfcn.h>
 
-DEF_bool(co_hook_log, false, ">>#1 print log for API hooks");
+// DEF_bool(co_hook_log, false, ">>#1 print log for API hooks");
 
 // #define HOOKLOG DLOG_IF(FLG_co_hook_log)
 

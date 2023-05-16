@@ -2,7 +2,6 @@
 
 #include "def.h"
 #include "closure.h"
-#include "flag.h"
 #include "stl.h"
 #include "./co/thread.h"
 #include "./co/sock.h"

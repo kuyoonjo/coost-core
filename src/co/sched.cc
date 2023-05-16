@@ -2,10 +2,15 @@
 #include "co/os.h"
 #include "co/rand.h"
 
-DEF_uint32(co_sched_num, os::cpunum(), ">>#1 number of coroutine schedulers");
-DEF_uint32(co_stack_num, 8, ">>#1 number of stacks per scheduler, must be power of 2");
-DEF_uint32(co_stack_size, 1024 * 1024, ">>#1 size of the stack shared by coroutines");
-DEF_bool(co_sched_log, false, ">>#1 print logs for coroutine schedulers");
+// DEF_uint32(co_sched_num, os::cpunum(), ">>#1 number of coroutine schedulers");
+// DEF_uint32(co_stack_num, 8, ">>#1 number of stacks per scheduler, must be power of 2");
+// DEF_uint32(co_stack_size, 1024 * 1024, ">>#1 size of the stack shared by coroutines");
+// DEF_bool(co_sched_log, false, ">>#1 print logs for coroutine schedulers");
+
+
+static inline uint32 FLG_co_sched_num = os::cpunum();
+static inline uint32 FLG_co_stack_num = 8;
+static inline uint32 FLG_co_stack_size = 1024 * 1024;
 
 #ifdef _MSC_VER
 extern LONG WINAPI _co_on_exception(PEXCEPTION_POINTERS p);

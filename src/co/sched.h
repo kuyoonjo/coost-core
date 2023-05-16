@@ -7,7 +7,6 @@
 #include "co/co.h"
 #include "co/god.h"
 #include "co/mem.h"
-#include "co/flag.h"
 #include "co/stl.h"
 #include "co/time.h"
 #include "co/closure.h"
@@ -22,10 +21,10 @@
 #include "epoll/kqueue.h"
 #endif
 
-DEC_uint32(co_sched_num);
-DEC_uint32(co_stack_num);
-DEC_uint32(co_stack_size);
-DEC_bool(co_sched_log);
+// DEC_uint32(co_sched_num);
+// DEC_uint32(co_stack_num);
+// DEC_uint32(co_stack_size);
+// DEC_bool(co_sched_log);
 
 // #define SCHEDLOG DLOG_IF(FLG_co_sched_log)
 
