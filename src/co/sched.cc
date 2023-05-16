@@ -1,5 +1,4 @@
 #include "sched.h"
-#include "co/os.h"
 #include "co/rand.h"
 
 // DEF_uint32(co_sched_num, os::cpunum(), ">>#1 number of coroutine schedulers");
@@ -8,7 +7,7 @@
 // DEF_bool(co_sched_log, false, ">>#1 print logs for coroutine schedulers");
 
 
-static inline uint32 FLG_co_sched_num = os::cpunum();
+static inline uint32 FLG_co_sched_num = std::thread::hardware_concurrency();
 static inline uint32 FLG_co_stack_num = 8;
 static inline uint32 FLG_co_stack_size = 1024 * 1024;
 
@@ -285,7 +284,7 @@ SchedManager::SchedManager() {
     co::init_sock();
     co::init_hook();
 
-    const uint32 ncpu = os::cpunum();
+    const uint32 ncpu = std::thread::hardware_concurrency();
     auto& n = FLG_co_sched_num;
     auto& m = FLG_co_stack_num;
     auto& s = FLG_co_stack_size;
@@ -364,7 +363,7 @@ const co::vector<co::Sched*>& scheds() {
 }
 
 int sched_num() {
-    return xx::is_active() ? (int)xx::sched_man()->scheds().size() : os::cpunum();
+    return xx::is_active() ? (int)xx::sched_man()->scheds().size() : std::thread::hardware_concurrency();
 }
 
 co::Sched* sched() { return (co::Sched*) xx::gSched; }
