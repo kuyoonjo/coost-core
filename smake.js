@@ -4,8 +4,8 @@ const { globSync } = require('glob');
 
 const targets = [
   'aarch64-apple-darwin',
-  'aarch64-linux-gnu',
-  'x86_64-pc-windows-msvc',
+  // 'aarch64-linux-gnu',
+  // 'x86_64-pc-windows-msvc',
 ];
 
 const builds = targets.map(target => {
@@ -37,6 +37,8 @@ const builds = targets.map(target => {
   test.cxflags = [
     ...test.cxflags,
     // '-D_CO_DISABLE_HOOK',
+    '-Wno-write-strings',
+    '-D_WINSOCK_DEPRECATED_NO_WARNINGS',
   ];
 
   if (target.includes('linux')) {

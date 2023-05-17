@@ -2,12 +2,12 @@
 
 #include "co/co.h"
 #include <iostream>
-DEF_main(argc, argv) {
-    go([](){
+int main(int argc, char** argv) {
+    co::go([](){
         std::cout << "hello world" << std::endl;
     });
     co::sleep(1000);
-    go([](){
+    co::go([](){
         std::cout << "hello world" << std::endl;
     });
     co::sleep(100);

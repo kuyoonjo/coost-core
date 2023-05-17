@@ -172,12 +172,12 @@ _CO_DEF_SYS_API(kevent);
     if (!__sys_api(f)) { \
         void* origin = 0;   \
         rebind_symbols((rebinding[1]){{#f, (void*)::_hook(f), (void**)&origin}}, 1); \
-        atomic_store(&__sys_api(f), origin, mo_relaxed); \
+        atomic_store(&__sys_api(f), origin, co::mo_relaxed); \
     }
 #else
 #define _hook(f) f
 #define _hook_api(f) \
-    if (!__sys_api(f)) atomic_store(&__sys_api(f), dlsym(RTLD_NEXT, #f), mo_relaxed)
+    if (!__sys_api(f)) atomic_store(&__sys_api(f), dlsym(RTLD_NEXT, #f), co::mo_relaxed)
 #define hook_api(f) _hook_api(f)
 #endif
 
@@ -1020,7 +1020,7 @@ struct hostent* _hook(gethostbyname2)(const char* name, int af) {
     const auto sched = co::xx::gSched;
     if (!sched || !name) return __sys_api(gethostbyname2)(name, af);
 
-    fastream fs(1024);
+    co::fastream fs(1024);
     struct hostent* ent = gHostEnt();
     struct hostent* res = 0;
     int* err = (int*) fs.data();
