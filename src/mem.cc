@@ -3,6 +3,7 @@
 #include "co/clist.h"
 #include "co/god.h"
 #include <mutex>
+#include <string.h>
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN

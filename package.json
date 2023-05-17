@@ -10,8 +10,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@smake/llvm": "^1.2.0",
-    "@smake/llvm-vscode": "^1.0.0",
+    "@smake/llvm": "^1.2.2",
+    "@smake/llvm-vscode": "^1.0.1",
     "glob": "^10.2.4"
   }
 }
