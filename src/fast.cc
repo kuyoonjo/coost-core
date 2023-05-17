@@ -1,5 +1,6 @@
 #include "co/fast.h"
 #include <string.h>
+#include "dtoa_milo.h"
 
 namespace fast {
 
@@ -50,6 +51,10 @@ inline uint16* get_itoh_table() {
 inline uint32* get_itoa_table() {
     static uint32* itoa_table = create_itoa_table();
     return itoa_table;
+}
+
+int dtoa(double v, char* buf, int mdp) {
+    return milo::dtoa(v, buf, mdp);
 }
 
 int u32toh(uint32 v, char* buf) {

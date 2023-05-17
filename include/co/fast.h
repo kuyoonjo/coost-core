@@ -3,7 +3,6 @@
 #include "def.h"
 #include "god.h"
 #include "mem.h"
-#include "__/dtoa_milo.h"
 
 #include <assert.h>
 #include <string.h>
@@ -41,9 +40,7 @@ namespace fast {
 
 // double to ascii string, return length of the result
 // @mdp  max decimal places
-inline int dtoa(double v, char* buf, int mdp=324) {
-    return milo::dtoa(v, buf, mdp);
-}
+__coapi int dtoa(double v, char* buf, int mdp=324);
 
 // unsigned integer to hex string, return length of the result
 //   - 255 -> "0xff"
