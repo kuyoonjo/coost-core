@@ -13,7 +13,7 @@ void hook_sleep(bool) {}
 #include <sys/uio.h>
 #endif
 #include "sched.h"
-#include "co/cout.h"
+// #include "co/cout.h"
 #include "co/defer.h"
 #include "co/table.h"
 #include <stdarg.h>
@@ -1212,7 +1212,7 @@ static bool _init_hook() {
     if (!__sys_api(select)) {
         void* origin = 0;
         rebind_symbols((rebinding[1]){{"select$1050", (void*)::_hook(select), (void**)&origin}}, 1);
-        if (!origin) co::print(text::bold("hook select failed..").red());
+        // if (!origin) co::print(text::bold("hook select failed..").red());
         atomic_store(&__sys_api(select), origin, mo_relaxed);
     }
   #endif
