@@ -62,14 +62,14 @@ void Sched::stop(uint32 ms) {
 
 void Sched::main_func(tb_context_from_t from) {
     ((Coroutine*)from.priv)->ctx = from.ctx;
-  #ifdef _MSC_VER
-    __try {
-        ((Coroutine*)from.priv)->sched->running()->cb->run();
-    } __except(_co_on_exception(GetExceptionInformation())) {
-    }
-  #else
+//   #ifdef _MSC_VER
+//     __try {
+//         ((Coroutine*)from.priv)->sched->running()->cb->run();
+//     } __except(_co_on_exception(GetExceptionInformation())) {
+//     }
+//   #else
     ((Coroutine*)from.priv)->sched->running()->cb->run();
-  #endif // _WIN32
+//   #endif // _WIN32
     tb_context_jump(from.ctx, 0); // jump back to the from context
 }
 

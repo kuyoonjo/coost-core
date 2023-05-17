@@ -2,7 +2,6 @@
 #pragma once
 
 #include "co/co.h"
-#include "co/log.h"
 #include "co/error.h"
 #include "../hook.h"
 #include "../sock_ctx.h"
@@ -23,7 +22,7 @@ class Iocp {
             ctx.add_event();
             return true;
         } else {
-            //ELOG << "iocp add socket " << fd << " error: " << co::strerror();
+            // ELOG << "iocp add socket " << fd << " error: " << co::strerror();
             // always return true here.
             return true;
         }
@@ -59,7 +58,7 @@ class Iocp {
             const BOOL r = PostQueuedCompletionStatus(_iocp, 0, 0, 0);
             if (!r) {
                 const uint32 e = ::GetLastError();
-                ELOG << "PostQueuedCompletionStatus error: " << co::strerror(e);
+                // ELOG << "PostQueuedCompletionStatus error: " << co::strerror(e);
             }
         }
     }
