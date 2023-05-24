@@ -6,3 +6,4 @@
 /.ninja_log
 /.ninja_deps
 /compile_commands.json
+/lib
