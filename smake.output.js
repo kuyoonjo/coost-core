@@ -9,20 +9,9 @@ const targets = [
 ];
 
 const builds = targets.map(target => {
-  const test = new LLVM('coost-co-test', target);
-  test.files = ['test/co.cxx'];
-  LibCoost.Co.config(test);
-  if (test.target.includes('linux')) {
-    test.libs = [
-      ...test.libs,
-      'pthread', 'dl',
-    ]
-  }
-  test.cxflags = [
-    ...test.cxflags,
-    '-D_CO_DISABLE_HOOK',
-    '-D_CO_ENABLE_SCHEDLOG',
-  ];
+  const test = new LLVM('coost-output-test', target);
+  test.files = ['test/output.cxx'];
+  LibCoost.Output.config(test);
   vscode(test);
 
   return test;

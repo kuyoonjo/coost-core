@@ -392,6 +392,19 @@ export namespace LibCoost {
     }
   }
 
+  export abstract class Output {
+    static config(llvm: LLVM) {
+      llvm.includedirs = [
+        ...llvm.includedirs,
+        resolve(__dirname, '..', 'coost', 'output', 'include').replace(
+          /\\/g,
+          '/'
+        ),
+      ];
+      Fast.config(llvm);
+    }
+  }
+
   export abstract class Co {
     static config(llvm: LLVM) {
       llvm.includedirs = [
@@ -448,6 +461,7 @@ export namespace LibCoost {
       Containers.Set.config(llvm);
       Containers.UnorderedSet.config(llvm);
       Error.config(llvm);
+      Output.config(llvm);
     }
   }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "coost/fastring.h"
 #ifdef _MSC_VER
 #pragma warning(disable : 4127)
 #endif
@@ -15,7 +16,7 @@
 #include <coost/containers/clist.h>
 #include <coost/containers/map.h>
 #include <coost/containers/set.h>
-
+#include "../include/log.h"
 
 #if defined(_WIN32)
 #include "epoll/iocp.h"
@@ -31,6 +32,13 @@
 // DEC_bool(co_sched_log);
 
 // #define SCHEDLOG DLOG_IF(FLG_co_sched_log)
+
+
+#ifdef _CO_ENABLE_SCHEDLOG
+#define SCHEDLOG(...) CO_LOG_TRACE("SCHED ", __VA_ARGS__)
+#else
+#define SCHEDLOG(...) {}
+#endif
 
 namespace coost {
 namespace co {
@@ -368,8 +376,7 @@ public:
     if (_wait_ms > ms)
       _wait_ms = ms;
     _running->it = _timer_mgr.add_timer(ms, _running);
-    // SCHEDLOG << "co(" << _running << ") add timer " << _running->it << " ("
-    // << ms << " ms)" ;
+    SCHEDLOG("co(", _running, ") add timer ", _running->it, " (", ms, " ms)");
   }
 
   // check whether the current coroutine has timed out
@@ -377,8 +384,7 @@ public:
 
   // add an IO event on a socket to epoll for the current coroutine.
   bool add_io_event(sock_t fd, _ev_t ev) {
-    // SCHEDLOG << "co(" << _running << ") add io event fd: " << fd << " ev: "
-    // << (int)ev;
+    SCHEDLOG("co(", _running, ") add io event fd: ", fd, " ev: ", (int)ev);
 #if defined(_WIN32)
     (void)ev; // we do not care what the event is on windows
     return _x.epoll->add_event(fd);
@@ -393,14 +399,13 @@ public:
 
   // delete an IO event on a socket from the epoll for the current coroutine.
   void del_io_event(sock_t fd, _ev_t ev) {
-    // SCHEDLOG << "co(" << _running << ") del io event, fd: " << fd << " ev: "
-    // << (int)ev;
+    SCHEDLOG("co(", _running, ") del io event, fd: ", fd, " ev: ", (int)ev);
     ev == ev_read ? _x.epoll->del_ev_read(fd) : _x.epoll->del_ev_write(fd);
   }
 
   // delete all IO events on a socket from the epoll.
   void del_io_event(sock_t fd) {
-    // SCHEDLOG << "co(" << _running << ") del io event, fd: " << fd;
+    SCHEDLOG("co(", _running, ") del io event, fd: ", fd);
     _x.epoll->del_event(fd);
   }
 
