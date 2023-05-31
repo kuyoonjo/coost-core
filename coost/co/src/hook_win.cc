@@ -1,7 +1,7 @@
 #ifdef _WIN32
 #include "hook.h"
 
-#ifdef _CO_DISABLE_HOOK
+#ifdef _COOST_CO_DISABLE_HOOK
 namespace coost {
 namespace co {
 void init_hook() {}
@@ -19,7 +19,12 @@ void hook_sleep(bool) {}
 
 // DEF_bool(co_hook_log, false, ">>#1 enable log for hook if true");
 
-#define HOOKLOG DLOG_IF(FLG_co_hook_log)
+#ifdef _COOST_CO_ENABLE_HOOKLOG
+#define HOOKLOG(...) COOST_LOG_TRACE("HOOK ", __VA_ARGS__)
+#else
+#define HOOKLOG(...)                                                           \
+  {}
+#endif
 
 namespace coost {
 namespace co {
@@ -172,7 +177,7 @@ inline void set_skip_iocp(sock_t s, coost::co::HookCtx *ctx) {
 }
 
 void WINAPI hook_Sleep(DWORD a0) {
-  // HOOKLOG << "hook_Sleep: " << a0;
+  HOOKLOG("hook_Sleep: ", a0);
   const auto sched = coost::co::xx::gSched;
   if (!sched || !gHook().hook_sleep)
     return __sys_api(Sleep)(a0);
@@ -184,7 +189,7 @@ SOCKET WINAPI hook_socket(int a0, int a1, int a2) {
   auto ctx = gHook().get_hook_ctx(s);
   if (ctx && a1 != SOCK_STREAM)
     ctx->set_non_sock_stream();
-  // HOOKLOG << "hook_socket, sock: " << (int)s;
+  HOOKLOG("hook_socket, sock: ", (int)s);
   return s;
 }
 
@@ -199,7 +204,7 @@ SOCKET WINAPI hook_WSASocketA(int a0, int a1, int a2, LPWSAPROTOCOL_INFOA a3,
     if (a1 != SOCK_STREAM)
       ctx->set_non_sock_stream();
   }
-  // HOOKLOG << "hook_WSASocketA, sock: " << (int)s << " overlapped: " << ol;
+  HOOKLOG("hook_WSASocketA, sock: ", (int)s, " overlapped: ", ol);
   return s;
 }
 
@@ -214,7 +219,7 @@ SOCKET WINAPI hook_WSASocketW(int a0, int a1, int a2, LPWSAPROTOCOL_INFOW a3,
     if (a1 != SOCK_STREAM)
       ctx->set_non_sock_stream();
   }
-  // HOOKLOG << "hook_WSASocketW, sock: " << (int)s << " overlapped: " << ol;
+  HOOKLOG("hook_WSASocketW, sock: ", (int)s, " overlapped: ", ol);
   return s;
 }
 
@@ -228,7 +233,7 @@ int WINAPI hook_closesocket(SOCKET s) {
     WSASetLastError(WSAENOTSOCK);
     r = SOCKET_ERROR;
   }
-  // HOOKLOG << "hook_closesocket, sock: " << (int)s << " r: " << r;
+  HOOKLOG("hook_closesocket, sock: ", (int)s, " r: ", r);
   return r;
 }
 
@@ -258,7 +263,7 @@ int WINAPI hook_shutdown(SOCKET a0, int a1) {
     r = SOCKET_ERROR;
   }
 
-  // HOOKLOG << "hook_shutdown, sock: " << a0 << " a1: " << a1 << " r: " << r;
+  HOOKLOG("hook_shutdown, sock: ", a0, " a1: ", a1, " r: ", r);
   return r;
 }
 
@@ -268,10 +273,10 @@ int WINAPI hook_setsockopt(SOCKET a0, int a1, int a2, const char *a3, int a4) {
     auto ctx = gHook().get_hook_ctx(a0);
     const DWORD ms = *(DWORD *)a3;
     if (a2 == SO_RCVTIMEO) {
-      // HOOKLOG << "hook_setsockopt, sock: " << a0 << " recv timeout: " << ms;
+      HOOKLOG("hook_setsockopt, sock: ", a0, " recv timeout: ", ms);
       ctx->set_recv_timeout(ms);
     } else {
-      // HOOKLOG << "hook_setsockopt, sock: " << a0 << " send timeout: " << ms;
+      HOOKLOG("hook_setsockopt, sock: ", a0, " send timeout: ", ms);
       ctx->set_send_timeout(ms);
     }
   }
@@ -282,7 +287,7 @@ int WINAPI hook_ioctlsocket(SOCKET a0, long a1, u_long *a2) {
   int r = __sys_api(ioctlsocket)(a0, a1, a2);
   if (r == 0 && a1 == FIONBIO) {
     gHook().get_hook_ctx(a0)->set_non_blocking((int)*a2);
-    // HOOKLOG << "hook_ioctlsocket, sock: " << a0 << " non_block: " << !!(*a2);
+    HOOKLOG("hook_ioctlsocket, sock: ", a0, " non_block: ", !!(*a2));
   }
   return r;
 }
@@ -297,8 +302,7 @@ int WINAPI hook_WSAIoctl(SOCKET a0, DWORD a1, LPVOID a2, DWORD a3, LPVOID a4,
     if (r == 0) {
       const int nb = (int)(*(u_long *)a2);
       gHook().get_hook_ctx(a0)->set_non_blocking(nb);
-      // HOOKLOG << "hook_WSAIoctl FIONBIO, sock: " << a0 << " non_block: " <<
-      // !!nb;
+      HOOKLOG("hook_WSAIoctl FIONBIO, sock: ", a0, " non_block: ", !!nb);
     }
     return r;
   }
@@ -324,7 +328,7 @@ int WINAPI hook_WSAIoctl(SOCKET a0, DWORD a1, LPVOID a2, DWORD a3, LPVOID a4,
   }
 
   set_non_blocking(a0, 0);
-  // HOOKLOG << "hook_WSAIoctl, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_WSAIoctl, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -332,7 +336,7 @@ int WINAPI hook_WSAAsyncSelect(SOCKET a0, HWND a1, u_int a2, long a3) {
   int r = __sys_api(WSAAsyncSelect)(a0, a1, a2, a3);
   if (r == 0)
     gHook().get_hook_ctx(a0)->set_non_blocking(1);
-  // HOOKLOG << "hook_WSAAsyncSelect, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_WSAAsyncSelect, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -340,7 +344,7 @@ int WINAPI hook_WSAEventSelect(SOCKET a0, WSAEVENT a1, long a2) {
   int r = __sys_api(WSAEventSelect)(a0, a1, a2);
   if (r == 0)
     gHook().get_hook_ctx(a0)->set_non_blocking(1);
-  // HOOKLOG << "hook_WSAEventSelect, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_WSAEventSelect, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -358,8 +362,8 @@ SOCKET WINAPI hook_accept(SOCKET a0, sockaddr *a1, int *a2) {
     goto end;
   }
 
-  // WLOG_FIRST_N(4) << "performance warning: accept on non-overlapped socket: "
-  // << a0;
+  COOST_ATOMIC_FIRST(4)
+  COOST_LOG_WARN("performance warning: accept on non-overlapped socket: ", a0);
   if (!ctx->has_nb_mark()) {
     set_non_blocking(a0, 1);
     ctx->set_nb_mark();
@@ -379,7 +383,7 @@ SOCKET WINAPI hook_accept(SOCKET a0, sockaddr *a1, int *a2) {
   }
 
 end:
-  // HOOKLOG << "hook_accept, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_accept, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -399,11 +403,12 @@ SOCKET WINAPI hook_WSAAccept(SOCKET a0, sockaddr *a1, LPINT a2,
   }
 
   if (a3) {
-    // WLOG_FIRST_N(4) << "performance warning: WSAAccept with condition, sock:
-    // " << a0;
+    COOST_ATOMIC_FIRST(4)
+    COOST_LOG_WARN("performance warning: WSAAccept with condition, sock: ", a0);
   } else {
-    // WLOG_FIRST_N(4) << "performance warning: WSAAccept on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(4)
+    COOST_LOG_WARN("performance warning: WSAAccept on non-overlapped socket: ",
+                   a0);
   }
 
   if (!ctx->has_nb_mark()) {
@@ -425,7 +430,7 @@ SOCKET WINAPI hook_WSAAccept(SOCKET a0, sockaddr *a1, LPINT a2,
   }
 
 end:
-  // HOOKLOG << "hook_WSAAccept, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_WSAAccept, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -444,8 +449,9 @@ int WINAPI hook_connect(SOCKET a0, CONST sockaddr *a1, int a2) {
   }
 
   {
-    // WLOG_FIRST_N(4) << "performance warning: connect on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(4)
+    COOST_LOG_WARN("performance warning: connect on non-overlapped socket: ",
+                   a0);
     set_non_blocking(a0, 1);
     defer(set_non_blocking(a0, 0));
 
@@ -475,7 +481,7 @@ int WINAPI hook_connect(SOCKET a0, CONST sockaddr *a1, int a2) {
   }
 
 end:
-  // HOOKLOG << "hook_connect, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_connect, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -496,11 +502,14 @@ int WINAPI hook_WSAConnect(SOCKET a0, sockaddr *a1, int a2, LPWSABUF a3,
 
   {
     if (ctx->is_non_overlapped()) {
-      // WLOG_FIRST_N(8) << "performance warning: WSAConnect on non-overlapped
-      // socket: " << a0;
+      COOST_ATOMIC_FIRST(8)
+      COOST_LOG_WARN(
+          "performance warning: WSAConnect on non-overlapped socket: ", a0);
     } else {
-      // WLOG_FIRST_N(8) << "performance warning: WSAConnect with extra connect
-      // data, sock: " << a0;
+      COOST_ATOMIC_FIRST(8)
+      COOST_LOG_WARN(
+          "performance warning: WSAConnect with extra connect data, sock: ",
+          a0);
     }
 
     set_non_blocking(a0, 1);
@@ -532,7 +541,7 @@ int WINAPI hook_WSAConnect(SOCKET a0, sockaddr *a1, int a2, LPWSABUF a3,
   }
 
 end:
-  // HOOKLOG << "hook_WSAConnect, sock: " << a0 << " r: " << r;
+  HOOKLOG("hook_WSAConnect, sock: ", a0, " r: ", r);
   return r;
 }
 
@@ -633,14 +642,14 @@ int WINAPI hook_recv(SOCKET a0, char *a1, int a2, int a3) {
     goto end;
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: recv on non-overlapped socket: "
-    // << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: recv on non-overlapped socket: ", a0);
     do_hard_hook(ctx, a0, ctx->recv_timeout(), T,
                  __sys_api(recv)(a0, a1, a2, a3));
   }
 
 end:
-  // HOOKLOG << "hook_recv, sock: " << a0 << " n: " << a2 << " r: " << r;
+  HOOKLOG("hook_recv, sock: ", a0, " n: ", a2, " r: ", r);
   return r;
 }
 
@@ -687,15 +696,16 @@ int WINAPI hook_WSARecv(SOCKET a0, LPWSABUF a1, DWORD a2, LPDWORD a3,
     }
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: WSARecv on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: WSARecv on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->recv_timeout(), T,
                  __sys_api(WSARecv)(a0, a1, a2, a3, a4, a5, a6));
   }
 
 end:
-  // HOOKLOG << "hook_WSARecv, sock: " << a0 << " r: " << r << " a3: " << ((r ==
-  // 0 && a3) ? *a3 : 0);
+  HOOKLOG("hook_WSARecv, sock: ", a0, " r: ", r,
+          " a3: ", ((r == 0 && a3) ? *a3 : 0));
   return r;
 }
 
@@ -747,14 +757,15 @@ int WINAPI hook_recvfrom(SOCKET a0, char *a1, int a2, int a3, sockaddr *a4,
     goto end;
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: recvfrom on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: recvfrom on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->recv_timeout(), T,
                  __sys_api(recvfrom)(a0, a1, a2, a3, a4, a5));
   }
 
 end:
-  // HOOKLOG << "hook_recvfrom, sock: " << a0 << " n: " << a2 << " r: " << r;
+  HOOKLOG("hook_recvfrom, sock: ", a0, " n: ", a2, " r: ", r);
   return r;
 }
 
@@ -819,15 +830,16 @@ int WINAPI hook_WSARecvFrom(SOCKET a0, LPWSABUF a1, DWORD a2, LPDWORD a3,
     }
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: WSARecvFrom on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN(
+        "performance warning: WSARecvFrom on non-overlapped socket: ", a0);
     do_hard_hook(ctx, a0, ctx->recv_timeout(), T,
                  __sys_api(WSARecvFrom)(a0, a1, a2, a3, a4, a5, a6, a7, a8));
   }
 
 end:
-  // HOOKLOG << "hook_WSARecvFrom, sock: " << a0 << " r: " << r << " a3: " <<
-  // ((r == 0 && a3) ? *a3 : 0);
+  HOOKLOG("hook_WSARecvFrom, sock: ", a0, " r: ", r,
+          " a3: ", ((r == 0 && a3) ? *a3 : 0));
   return r;
 }
 
@@ -859,14 +871,14 @@ int WINAPI hook_send(SOCKET a0, CONST char *a1, int a2, int a3) {
     goto end;
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: send on non-overlapped socket: "
-    // << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: send on non-overlapped socket: ", a0);
     do_hard_hook(ctx, a0, ctx->send_timeout(), T,
                  __sys_api(send)(a0, a1, a2, a3));
   }
 
 end:
-  // HOOKLOG << "hook_send, sock: " << a0 << " n: " << a2 << " r: " << r;
+  HOOKLOG("hook_send, sock: ", a0, " n: ", a2, " r: ", r);
   return r;
 }
 
@@ -902,15 +914,16 @@ int WINAPI hook_WSASend(SOCKET a0, LPWSABUF a1, DWORD a2, LPDWORD a3, DWORD a4,
     goto end;
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: WSASend on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: WSASend on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->send_timeout(), T,
                  __sys_api(WSASend)(a0, a1, a2, a3, a4, a5, a6));
   }
 
 end:
-  // HOOKLOG << "hook_WSASend, sock: " << a0 << " r: " << r << " a3: " << ((r ==
-  // 0 && a3) ? *a3 : 0);
+  HOOKLOG("hook_WSASend, sock: ", a0, " r: ", r,
+          " a3: ", ((r == 0 && a3) ? *a3 : 0));
   return r;
 }
 
@@ -943,14 +956,15 @@ int WINAPI hook_sendto(SOCKET a0, CONST char *a1, int a2, int a3,
     goto end;
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: sendto on non-overlapped socket:
-    // " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: sendto on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->send_timeout(), T,
                  __sys_api(sendto)(a0, a1, a2, a3, a4, a5));
   }
 
 end:
-  // HOOKLOG << "hook_sendto, sock: " << a0 << " n: " << a2 << " r: " << r;
+  HOOKLOG("hook_sendto, sock: ", a0, " n: ", a2, " r: ", r);
   return r;
 }
 
@@ -987,15 +1001,16 @@ int WINAPI hook_WSASendTo(SOCKET a0, LPWSABUF a1, DWORD a2, LPDWORD a3,
     goto end;
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: WSASendTo on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: WSASendTo on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->send_timeout(), T,
                  __sys_api(WSASendTo)(a0, a1, a2, a3, a4, a5, a6, a7, a8));
   }
 
 end:
-  // HOOKLOG << "hook_WSASendTo, sock: " << a0 << " r: " << r << " a3: " << ((r
-  // == 0 && a3) ? *a3 : 0);
+  HOOKLOG("hook_WSASendTo, sock: ", a0, " r: ", r,
+          " a3: ", ((r == 0 && a3) ? *a3 : 0));
   return r;
 }
 
@@ -1091,15 +1106,16 @@ int WINAPI hook_WSARecvMsg(SOCKET a0, LPWSAMSG a1, LPDWORD a2,
     }
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: WSARecvMsg on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: WSARecvMsg on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->recv_timeout(), T,
                  __sys_api(WSARecvMsg)(a0, a1, a2, a3, a4));
   }
 
 end:
-  // HOOKLOG << "hook_WSARecvMsg, sock: " << a0 << " r: " << r << " a2: " << ((r
-  // == 0 && a2) ? *a2 : 0);
+  HOOKLOG("hook_WSARecvMsg, sock: ", a0, " r: ", r,
+          " a2: ", ((r == 0 && a2) ? *a2 : 0));
   return r;
 }
 
@@ -1144,15 +1160,16 @@ int WINAPI hook_WSASendMsg(SOCKET a0, LPWSAMSG a1, DWORD a2, LPDWORD a3,
     }
 
   } else {
-    // WLOG_FIRST_N(8) << "performance warning: WSARecvMsg on non-overlapped
-    // socket: " << a0;
+    COOST_ATOMIC_FIRST(8)
+    COOST_LOG_WARN("performance warning: WSARecvMsg on non-overlapped socket: ",
+                   a0);
     do_hard_hook(ctx, a0, ctx->send_timeout(), T,
                  __sys_api(WSASendMsg)(a0, a1, a2, a3, a4, a5));
   }
 
 end:
-  // HOOKLOG << "hook_WSASendMsg, sock: " << a0 << " r: " << r << " a3: " << ((r
-  // == 0 && a3) ? *a3 : 0);
+  HOOKLOG("hook_WSASendMsg, sock: ", a0, " r: ", r,
+          " a3: ", ((r == 0 && a3) ? *a3 : 0));
   return r;
 }
 
@@ -1214,7 +1231,7 @@ int WINAPI hook_select(int a0, fd_set *a1, fd_set *a2, fd_set *a3,
   }
 
 end:
-  // HOOKLOG << "hook_select, nfds: " << a0 << " ms: " << ms << " r: " << r;
+  HOOKLOG("hook_select, nfds: ", a0, " ms: ", ms, " r: ", r);
   return r;
 }
 
@@ -1241,7 +1258,7 @@ int WINAPI hook_WSAPoll(LPWSAPOLLFD a0, ULONG a1, INT a2) {
   }
 
 end:
-  // HOOKLOG << "hook_WSAPoll, nfds: " << a1 <<  " ms: " << a2 << " r: " << r;
+  HOOKLOG("hook_WSAPoll, nfds: ", a1, " ms: ", a2, " r: ", r);
   return r;
 }
 
@@ -1267,8 +1284,7 @@ DWORD WINAPI hook_WSAWaitForMultipleEvents(DWORD a0, CONST HANDLE *a1, BOOL a2,
   }
 
 end:
-  // HOOKLOG << "hook_WSAWaitForMultipleEvents, n: " << a0 << " ms: " << a3 << "
-  // r: " << r;
+  HOOKLOG("hook_WSAWaitForMultipleEvents, n: ", a0, " ms: ", a3, "r: ", r);
   return r;
 }
 
@@ -1294,8 +1310,8 @@ BOOL WINAPI hook_GetQueuedCompletionStatus(HANDLE a0, LPDWORD a1, PULONG_PTR a2,
   }
 
 end:
-  // HOOKLOG << "hook_GetQueuedCompletionStatus, handle: " << a0 << " ms: " <<
-  // a4 << " r: " << r;
+  HOOKLOG("hook_GetQueuedCompletionStatus, handle: ", a0, " ms: ", a4,
+          " r: ", r);
   return r;
 }
 
@@ -1322,8 +1338,8 @@ BOOL WINAPI hook_GetQueuedCompletionStatusEx(HANDLE a0, LPOVERLAPPED_ENTRY a1,
   }
 
 end:
-  // HOOKLOG << "hook_GetQueuedCompletionStatusEx, handle: " << a0 << " ms: " <<
-  // a4 << " r: " << r;
+  HOOKLOG("hook_GetQueuedCompletionStatusEx, handle: ", a0, " ms: ", a4,
+          " r: ", r);
   return r;
 }
 
@@ -1332,7 +1348,8 @@ WSARecvMsg_fp_t get_WSARecvMsg_fp() {
   WSAStartup(MAKEWORD(2, 2), &x);
 
   sock_t fd = ::socket(AF_INET, SOCK_DGRAM, 0);
-  // CHECK_NE(fd, INVALID_SOCKET) << "create socket error: " << co::strerror();
+  if (fd == INVALID_SOCKET)
+    COOST_LOG_FATAL("create socket error: ", coost::strerror());
 
   int r = 0;
   DWORD n = 0;
@@ -1340,8 +1357,10 @@ WSARecvMsg_fp_t get_WSARecvMsg_fp() {
   WSARecvMsg_fp_t fp = NULL;
   r = WSAIoctl(fd, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid), &fp,
                sizeof(fp), &n, 0, 0);
-  // CHECK_EQ(r, 0) << "get WSARecvMsg failed: " << co::strerror();
-  // CHECK(fp != NULL) << "pointer to WSARecvMsg is NULL..";
+  if (r)
+    COOST_LOG_FATAL("get WSARecvMsg failed: ", coost::strerror());
+  if (fp == NULL)
+    COOST_LOG_FATAL("pointer to WSARecvMsg is NULL..");
 
   __sys_api(closesocket)(fd);
   return fp;
@@ -1352,7 +1371,8 @@ WSASendMsg_fp_t get_WSASendMsg_fp() {
   WSAStartup(MAKEWORD(2, 2), &x);
 
   sock_t fd = ::socket(AF_INET, SOCK_DGRAM, 0);
-  // CHECK_NE(fd, INVALID_SOCKET) << "create socket error: " << co::strerror();
+  if (fd == INVALID_SOCKET)
+    COOST_LOG_FATAL("create socket error: ", coost::strerror());
 
   int r = 0;
   DWORD n = 0;
@@ -1360,8 +1380,10 @@ WSASendMsg_fp_t get_WSASendMsg_fp() {
   WSASendMsg_fp_t fp = NULL;
   r = WSAIoctl(fd, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid), &fp,
                sizeof(fp), &n, 0, 0);
-  // CHECK_EQ(r, 0) << "get WSASendMsg failed: " << co::strerror();
-  // CHECK(fp != NULL) << "pointer to WSASendMsg is NULL..";
+  if (r)
+    COOST_LOG_FATAL("get WSASendMsg failed: ", coost::strerror());
+  if (fp == NULL)
+    COOST_LOG_FATAL("pointer to WSASendMsg is NULL..");
 
   __sys_api(closesocket)(fd);
   return fp;
@@ -1374,12 +1396,14 @@ namespace co {
 
 inline void detour_attach(PVOID *ppbReal, PVOID pbMine, PCHAR psz) {
   LONG l = DetourAttach(ppbReal, pbMine);
-  // CHECK_EQ(l, 0) << "detour attach failed: " << psz;
+  if (l)
+    COOST_LOG_FATAL("detour attach failed: ", psz);
 }
 
 inline void detour_detach(PVOID *ppbReal, PVOID pbMine, PCHAR psz) {
   LONG l = DetourDetach(ppbReal, pbMine);
-  // CHECK_EQ(l, 0) << "detour detach failed: " << psz;
+  if (l)
+    COOST_LOG_FATAL("detour detach failed: ", psz);
 }
 
 #define attach_hook(x)                                                         \
@@ -1477,5 +1501,5 @@ void hook_sleep(bool x) {
 #undef do_hard_hook
 #undef HOOKLOG
 
-#endif // _CO_DISABLE_HOOK
+#endif // _COOST_CO_DISABLE_HOOK
 #endif // #ifdef _WIN32

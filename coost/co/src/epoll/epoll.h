@@ -4,8 +4,8 @@
 #include "../hook.h"
 #include "../sock_ctx.h"
 #include <coost/co/co.h>
+#include <coost/log.h>
 #include <sys/epoll.h>
-
 
 namespace coost {
 namespace co {
@@ -39,7 +39,8 @@ public:
   void signal(char c = 'x') {
     if (atomic_bool_cas(&_signaled, 0, 1, mo_acq_rel, mo_acquire)) {
       const int r = (int)__sys_api(write)(_pipe_fds[1], &c, 1);
-      // ELOG_IF(r != 1) << "pipe write error..";
+      if (r != 1)
+        COOST_LOG_ERROR("pipe write error..");
     }
   }
 

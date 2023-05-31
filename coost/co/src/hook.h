@@ -14,10 +14,10 @@ void hook_sleep(bool x);
 
 // disable hook for android
 #ifdef __ANDROID__
-#define _CO_DISABLE_HOOK
+#define _COOST_CO_DISABLE_HOOK
 #endif
 
-#ifdef _CO_DISABLE_HOOK
+#ifdef _COOST_CO_DISABLE_HOOK
 #define __sys_api(x) ::x
 
 #else
@@ -268,4 +268,4 @@ _CO_DEC_SYS_API(kevent);
 } // "C"
 
 #endif // #ifdef _WIN32
-#endif // #ifdef _CO_DISABLE_HOOK
+#endif // #ifdef _COOST_CO_DISABLE_HOOK

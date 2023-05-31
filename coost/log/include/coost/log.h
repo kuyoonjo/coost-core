@@ -1,21 +1,26 @@
 #pragma once
 
-#ifdef CO_LOG_HEADER
+#ifdef _COOST_LOG_HEADER
+#include <coost/macro.h>
+#include PP_STRIFY(_COOST_LOG_HEADER)
 #else
 #include <coost/output.h>
 #include <coost/fastream.h>
 #include <chrono>
+#include <cstdlib>
 
-constexpr const char *labels[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR"};
+constexpr const char *labels[] = {"TRACE", "DEBUG", "INFO",
+                                  "WARN",  "ERROR", "FATAL"};
 
 namespace coost {
-namespace log_level {
-constexpr int TRACE = 0;
-constexpr int DEBUG = 1;
-constexpr int INFO = 2;
-constexpr int WARN = 3;
-constexpr int ERROR = 4;
-}
+enum log_level {
+  Trace = 0,
+  Debug = 1,
+  Info = 2,
+  Warn = 3,
+  Error = 4,
+  Fatal = 5,
+};
 template <int log_level, typename... X> inline void log(X &&...x) {
   auto now = std::chrono::system_clock::now();
   std::time_t dt =
@@ -31,11 +36,15 @@ template <int log_level, typename... X> inline void log(X &&...x) {
   coost::fastream fs;
   fs << '[' << buf << milliseconds.count() << ' ' << labels[log_level] << "] ";
   coost::println(fs.c_str(), x...);
+  if constexpr (log_level == log_level::Fatal) {
+    abort();
+  }
 }
 } // namespace coost
-#define CO_LOG_TRACE coost::log<coost::log_level::TRACE>
-#define CO_LOG_DEBUG coost::log<coost::log_level::DEBUG>
-#define CO_LOG_INFO coost::log<coost::log_level::INFO>
-#define CO_LOG_WARN coost::log<coost::log_level::WARN>
-#define CO_LOG_ERROR coost::log<coost::log_level::ERROR>
+#define COOST_LOG_TRACE coost::log<coost::log_level::Trace>
+#define COOST_LOG_DEBUG coost::log<coost::log_level::Debug>
+#define COOST_LOG_INFO coost::log<coost::log_level::Info>
+#define COOST_LOG_WARN coost::log<coost::log_level::Warn>
+#define COOST_LOG_ERROR coost::log<coost::log_level::Error>
+#define COOST_LOG_FATAL coost::log<coost::log_level::Fatal>
 #endif

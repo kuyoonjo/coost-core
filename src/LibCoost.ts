@@ -1,9 +1,20 @@
 import { resolve } from 'path';
 import { LLVM } from '@smake/llvm';
 
+function alreadyConfigured(llvm: any, self: any) {
+  if (!llvm.__libCoostSet) llvm.__libCoostSet = new Set<string>();
+  if (llvm.__libCoostSet.has(self.name)) {
+    return true;
+  } else {
+    llvm.__libCoostSet.add(self.name);
+    return false;
+  }
+}
+
 export namespace LibCoost {
   export abstract class Macro {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'macro', 'include').replace(
@@ -15,6 +26,7 @@ export namespace LibCoost {
   }
   export abstract class God {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'god', 'include').replace(/\\/g, '/'),
@@ -23,6 +35,7 @@ export namespace LibCoost {
   }
   export abstract class Atomic {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'atomic', 'include').replace(
@@ -30,10 +43,12 @@ export namespace LibCoost {
           '/'
         ),
       ];
+      Atomic.config(llvm);
     }
   }
   export abstract class Mem {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'mem', 'include').replace(/\\/g, '/'),
@@ -55,6 +70,7 @@ export namespace LibCoost {
   export namespace Crypto {
     export abstract class MurmurHash {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -85,6 +101,7 @@ export namespace LibCoost {
 
   export abstract class Fast {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'fast', 'include').replace(
@@ -111,6 +128,7 @@ export namespace LibCoost {
 
   export abstract class Time {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'time', 'include').replace(
@@ -134,6 +152,7 @@ export namespace LibCoost {
 
   export abstract class Rand {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'rand', 'include').replace(
@@ -158,6 +177,7 @@ export namespace LibCoost {
   export namespace Containers {
     export abstract class Clist {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -173,6 +193,7 @@ export namespace LibCoost {
     }
     export abstract class Array {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -190,6 +211,7 @@ export namespace LibCoost {
     }
     export abstract class Table {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -207,6 +229,7 @@ export namespace LibCoost {
     }
     export abstract class Vector {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -224,6 +247,7 @@ export namespace LibCoost {
     }
     export abstract class List {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -241,6 +265,7 @@ export namespace LibCoost {
     }
     export abstract class Deque {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -258,6 +283,7 @@ export namespace LibCoost {
     }
     export abstract class Compare {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -276,6 +302,7 @@ export namespace LibCoost {
     }
     export abstract class Map {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -294,6 +321,7 @@ export namespace LibCoost {
     }
     export abstract class Set {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -312,6 +340,7 @@ export namespace LibCoost {
     }
     export abstract class UnorderedMap {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -330,6 +359,7 @@ export namespace LibCoost {
     }
     export abstract class UnorderedSet {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -348,6 +378,7 @@ export namespace LibCoost {
     }
     export abstract class LruMap {
       static config(llvm: LLVM) {
+        if (alreadyConfigured(llvm, this)) return;
         llvm.includedirs = [
           ...llvm.includedirs,
           resolve(
@@ -369,6 +400,7 @@ export namespace LibCoost {
 
   export abstract class Error {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'error', 'include').replace(
@@ -394,6 +426,7 @@ export namespace LibCoost {
 
   export abstract class Output {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'output', 'include').replace(
@@ -407,6 +440,7 @@ export namespace LibCoost {
 
   export abstract class Co {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'co', 'include').replace(/\\/g, '/'),
@@ -462,11 +496,13 @@ export namespace LibCoost {
       Containers.UnorderedSet.config(llvm);
       Error.config(llvm);
       Output.config(llvm);
+      Log.config(llvm);
     }
   }
 
   export abstract class Str {
     static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
       llvm.includedirs = [
         ...llvm.includedirs,
         resolve(__dirname, '..', 'coost', 'str', 'include').replace(/\\/g, '/'),
@@ -485,6 +521,18 @@ export namespace LibCoost {
       Containers.Set.config(llvm);
       Containers.UnorderedSet.config(llvm);
       Error.config(llvm);
+    }
+  }
+
+  export abstract class Log {
+    static config(llvm: LLVM) {
+      if (alreadyConfigured(llvm, this)) return;
+      llvm.includedirs = [
+        ...llvm.includedirs,
+        resolve(__dirname, '..', 'coost', 'log', 'include').replace(/\\/g, '/'),
+      ];
+      Fast.config(llvm);
+      Output.config(llvm);
     }
   }
 }

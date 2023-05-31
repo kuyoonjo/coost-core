@@ -95,14 +95,15 @@ inline int get_address_family(sock_t fd) {
   WSAPROTOCOL_INFOW info;
   int len = sizeof(info);
   int r = ::getsockopt(fd, SOL_SOCKET, SO_PROTOCOL_INFO, (char *)&info, &len);
-  // CHECK(r == 0 && info.iAddressFamily > 0) << "get address family failed, fd:
-  // " << fd;
+  if (r || info.iAddressFamily <= 0)
+    COOST_LOG_FATAL("get address family failed, fd: ", fd);
   return info.iAddressFamily;
 }
 
 sock_t accept(sock_t fd, void *addr, int *addrlen) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   if (fd == (sock_t)-1) {
     coost::error() = WSAENOTSOCK;
@@ -142,7 +143,8 @@ sock_t accept(sock_t fd, void *addr, int *addrlen) {
                    sizeof(fd));
   if (r != 0) {
     e = WSAGetLastError();
-    // ELOG << "acceptex set SO_UPDATE_ACCEPT_CONTEXT failed, sock: " << connfd;
+    COOST_LOG_ERROR("acceptex set SO_UPDATE_ACCEPT_CONTEXT failed, sock: ",
+                    connfd);
     goto err;
   }
 
@@ -165,7 +167,8 @@ err:
 
 int connect(sock_t fd, const void *addr, int addrlen, int ms) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   // docs.microsoft.com/zh-cn/windows/win32/api/mswsock/nc-mswsock-lpfn_connectex
   // stackoverflow.com/questions/13598530/connectex-requires-the-socket-to-be-initially-bound-but-to-what
@@ -175,7 +178,7 @@ int connect(sock_t fd, const void *addr, int addrlen, int ms) {
     a.ss_family = ((const sockaddr *)addr)->sa_family;
     // WSAEINVAL is returned if the socket s is already bound to an address.
     if (co::bind(fd, &a, addrlen) != 0 && WSAGetLastError() != WSAEINVAL) {
-      // ELOG << "connectex bind local address failed, sock: " << fd;
+      COOST_LOG_ERROR("connectex bind local address failed, sock: ", fd);
       return -1;
     }
   } while (0);
@@ -193,21 +196,23 @@ int connect(sock_t fd, const void *addr, int addrlen, int ms) {
 
   r = ::setsockopt(fd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, 0, 0);
   if (r != 0) {
-    // ELOG << "connectex set SO_UPDATE_CONNECT_CONTEXT failed, sock: " << fd;
+    COOST_LOG_ERROR("connectex set SO_UPDATE_CONNECT_CONTEXT failed, sock: ",
+                    fd);
     goto err;
   }
 
   r = ::getsockopt(fd, SOL_SOCKET, SO_CONNECT_TIME, (char *)&seconds, &len);
   if (r == 0) {
     if (seconds < 0) {
-      // ELOG << "dragon here, connectex getsockopt(SO_CONNECT_TIME), seconds <
-      // 0, sock: " << fd;
+      COOST_LOG_ERROR("dragon here, connectex getsockopt(SO_CONNECT_TIME), "
+                      "seconds < 0, sock: ",
+                      fd);
       goto err;
     }
     set_skip_iocp_on_success(fd);
     return 0;
   } else {
-    // ELOG << "connectex getsockopt(SO_CONNECT_TIME) failed, sock: " << fd;
+    COOST_LOG_ERROR("connectex getsockopt(SO_CONNECT_TIME) failed, sock: ", fd);
     goto err;
   }
 
@@ -218,7 +223,8 @@ err:
 
 int recv(sock_t fd, void *buf, int n, int ms) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   int r, e;
   io_event ev(fd, ev_read);
@@ -240,7 +246,8 @@ int recv(sock_t fd, void *buf, int n, int ms) {
 
 int recvn(sock_t fd, void *buf, int n, int ms) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   char *p = (char *)buf;
   int remain = n, r, e;
@@ -271,7 +278,8 @@ int recvn(sock_t fd, void *buf, int n, int ms) {
 
 int recvfrom(sock_t fd, void *buf, int n, void *addr, int *addrlen, int ms) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   int r, e;
   char *s = 0;
@@ -313,7 +321,8 @@ int recvfrom(sock_t fd, void *buf, int n, void *addr, int *addrlen, int ms) {
 
 int send(sock_t fd, const void *buf, int n, int ms) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   const char *p = (const char *)buf;
   int remain = n, r, e;
@@ -343,7 +352,8 @@ int send(sock_t fd, const void *buf, int n, int ms) {
 int sendto(sock_t fd, const void *buf, int n, const void *addr, int addrlen,
            int ms) {
   const auto sched = xx::gSched;
-  // CHECK(sched) << "must be called in coroutine..";
+  if (!sched)
+    COOST_LOG_FATAL("must be called in coroutine..");
 
   int r, e;
   io_event ev(fd, ev_write, buf, n);
@@ -372,8 +382,8 @@ int sendto(sock_t fd, const void *buf, int n, const void *addr, int addrlen,
       ev->buf.len -= ev->n;
       memset(&ev->ol, 0, sizeof(ev->ol));
     } else {
-      // ELOG << "dragon here, sendto ev->n: " << ev->n << ", n: " << n << ",
-      // sock: " << fd;
+      COOST_LOG_ERROR("dragon here, sendto ev->n: ", ev->n, ", n: ", n,
+                      ", sock: ", fd);
       return -1;
     }
   } while (true);
@@ -417,7 +427,8 @@ void init_sock() {
   WSAStartup(MAKEWORD(2, 2), &x);
 
   sock_t fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  // CHECK_NE(fd, INVALID_SOCKET) << "create socket error: " << co::strerror();
+  if (fd == INVALID_SOCKET)
+    COOST_LOG_FATAL("create socket error: ", coost::strerror());
 
   int r = 0;
   DWORD n = 0;
@@ -426,17 +437,20 @@ void init_sock() {
   guid = WSAID_CONNECTEX;
   r = WSAIoctl(fd, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid),
                &connect_ex, sizeof(connect_ex), &n, 0, 0);
-  // CHECK_EQ(r, 0) << "get ConnectEx failed: " << co::strerror();
+  if (r)
+    COOST_LOG_FATAL("get ConnectEx failed: ", coost::strerror());
 
   guid = WSAID_ACCEPTEX;
   r = WSAIoctl(fd, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid),
                &accept_ex, sizeof(accept_ex), &n, 0, 0);
-  // CHECK_EQ(r, 0) << "get AcceptEx failed: " << co::strerror();
+  if (r)
+    COOST_LOG_FATAL("get AcceptEx failed: ", coost::strerror());
 
   guid = WSAID_GETACCEPTEXSOCKADDRS;
   r = WSAIoctl(fd, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid),
                &get_accept_ex_addrs, sizeof(get_accept_ex_addrs), &n, 0, 0);
-  // CHECK_EQ(r, 0) << "get GetAccpetExSockAddrs failed: " << co::strerror();
+  if (r)
+    COOST_LOG_FATAL("get GetAccpetExSockAddrs failed: ", coost::strerror());
 
   ::closesocket(fd);
   can_skip_iocp_on_success = _can_skip_iocp_on_success();

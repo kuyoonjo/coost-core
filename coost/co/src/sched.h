@@ -16,7 +16,7 @@
 #include <coost/containers/clist.h>
 #include <coost/containers/map.h>
 #include <coost/containers/set.h>
-#include "../include/log.h"
+#include <coost/log.h>
 
 #if defined(_WIN32)
 #include "epoll/iocp.h"
@@ -31,11 +31,8 @@
 // DEC_uint32_t(co_stack_size);
 // DEC_bool(co_sched_log);
 
-// #define SCHEDLOG DLOG_IF(FLG_co_sched_log)
-
-
-#ifdef _CO_ENABLE_SCHEDLOG
-#define SCHEDLOG(...) CO_LOG_TRACE("SCHED ", __VA_ARGS__)
+#ifdef _COOST_CO_ENABLE_SCHEDLOG
+#define SCHEDLOG(...) COOST_LOG_TRACE("SCHED ", __VA_ARGS__)
 #else
 #define SCHEDLOG(...) {}
 #endif

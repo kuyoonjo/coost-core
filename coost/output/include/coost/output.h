@@ -12,19 +12,21 @@ constexpr auto endl = "\r\n";
 constexpr auto endl = "\n";
 #endif
 
+namespace xx {
+static inline std::mutex output_mutex;
+static inline thread_local fastream output_fastream(256);
+} // namespace xx
+
 // print to fp (thread-safe)
 //   - coost::output(fp, "hello");
 template <typename... X> inline void output(FILE *fp, X &&...x) {
-  static auto m = mem::_make_rootic<std::mutex>();
-  static __thread fastream *s = 0;
-  if (!s)
-    s = mem::_make_rootic<fastream>(256);
-  auto n = s->size();
-  (((*s) << std::forward<X>(x)), ...);
-
-  std::lock_guard<std::mutex> lg(*m);
-  ::fwrite(s->data() + n, 1, s->size() - n, fp);
-  s->resize(n);
+  auto n = xx::output_fastream.size();
+  ((xx::output_fastream << std::forward<X>(x)), ...);
+  {
+    std::lock_guard<std::mutex> lg(xx::output_mutex);
+    ::fwrite(xx::output_fastream.data() + n, 1, xx::output_fastream.size() - n, fp);
+    xx::output_fastream.resize(n);
+  }
 }
 
 // print to stdout (thread-safe)

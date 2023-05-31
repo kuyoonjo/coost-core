@@ -1,5 +1,7 @@
 #pragma once
 
+#include <coost/macro.h>
+
 #ifdef _MSC_VER
 #include <atomic>
 #endif
@@ -268,3 +270,14 @@ inline bool atomic_bool_cas(T *p, O o, V v, memory_order_t smo = mo_seq_cst,
 }
 
 } // namespace coost
+
+#define COOST_VAR_COUNTER PP_CONCAT(_coost_var_counter_, __LINE__)
+
+#define COOST_ATOMIC_FIRST(n)                                                  \
+  static int COOST_VAR_COUNTER = 0;                                            \
+  if (COOST_VAR_COUNTER < (n) &&                                               \
+      coost::atomic_fetch_inc(&COOST_VAR_COUNTER, coost::mo_relaxed) < (n))
+
+#define COOST_ATOMIC_EVERY(n)                                                  \
+  static unsigned int COOST_VAR_COUNTER = 0;                                   \
+  if (coost::atomic_fetch_inc(&COOST_VAR_COUNTER, coost::mo_relaxed) % (n) == 0)

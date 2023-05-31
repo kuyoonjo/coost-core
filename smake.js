@@ -36,7 +36,7 @@ const builds = targets.map(target => {
   ];
   test.cxflags = [
     ...test.cxflags,
-    // '-D_CO_DISABLE_HOOK',
+    // '-D_COOST_CO_DISABLE_HOOK',
     '-Wno-write-strings',
     '-D_WINSOCK_DEPRECATED_NO_WARNINGS',
   ];

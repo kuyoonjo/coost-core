@@ -7,10 +7,11 @@ namespace co {
 
 Kqueue::Kqueue(int sched_id) : _signaled(0) {
   _kq = kqueue();
-  // CHECK_NE(_kq, -1) << "kqueue create error: " << co::strerror();
-  __sys_api(pipe)(_pipe_fds);
-  // CHECK_NE(__sys_api(pipe)(_pipe_fds), -1) << "create pipe error: " <<
-  // co::strerror();
+  if (_kq == -1)
+    COOST_LOG_FATAL("kqueue create error: ", coost::strerror());
+  auto ret = __sys_api(pipe)(_pipe_fds);
+  if (ret == -1)
+    COOST_LOG_FATAL("create pipe error: ", coost::strerror());
   co::set_cloexec(_pipe_fds[0]);
   co::set_cloexec(_pipe_fds[1]);
   co::set_nonblock(_pipe_fds[0]);
@@ -42,7 +43,8 @@ bool Kqueue::add_ev_read(int fd, void *p) {
     ctx.add_ev_read();
     return true;
   } else {
-    // ELOG << "kqueue add ev_read error: " << co::strerror() << ", fd: " << fd;
+    COOST_LOG_ERROR("kqueue add ev_read error: ", coost::strerror(),
+                    ", fd: ", fd);
     return false;
   }
 }
@@ -61,8 +63,8 @@ bool Kqueue::add_ev_write(int fd, void *p) {
     ctx.add_ev_write();
     return true;
   } else {
-    // ELOG << "kqueue add ev_write error: " << co::strerror() << ", fd: " <<
-    // fd;
+    COOST_LOG_ERROR("kqueue add ev_write error: ", coost::strerror(),
+                    ", fd: ", fd);
     return false;
   }
 }
@@ -79,7 +81,8 @@ void Kqueue::del_ev_read(int fd) {
   EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
 
   if (__sys_api(kevent)(_kq, &event, 1, 0, 0, 0) != 0) {
-    // ELOG << "kqueue del ev_read error: " << co::strerror() << ", fd: " << fd;
+    COOST_LOG_ERROR("kqueue del ev_read error: ", coost::strerror(),
+                    ", fd: ", fd);
   }
 }
 
@@ -95,8 +98,8 @@ void Kqueue::del_ev_write(int fd) {
   EV_SET(&event, fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
 
   if (__sys_api(kevent)(_kq, &event, 1, 0, 0, 0) != 0) {
-    // ELOG << "kqueue del ev_write error: " << co::strerror() << ", fd: " <<
-    // fd;
+    COOST_LOG_ERROR("kqueue del ev_write error: ", coost::strerror(),
+                    ", fd: ", fd);
   }
 }
 
@@ -116,7 +119,8 @@ void Kqueue::del_event(int fd) {
 
   ctx.del_event();
   if (__sys_api(kevent)(_kq, event, i, 0, 0, 0) != 0) {
-    // ELOG << "kqueue del event error: " << co::strerror() << ", fd: " << fd;
+    COOST_LOG_ERROR("kqueue del event error: ", coost::strerror(),
+                    ", fd: ", fd);
   }
 }
 
@@ -146,8 +150,8 @@ void Kqueue::handle_ev_pipe() {
         break;
       if (errno == EINTR)
         continue;
-      // ELOG << "pipe read error: " << co::strerror() << ", fd: " <<
-      // _pipe_fds[0];
+      COOST_LOG_ERROR("pipe read error: ", coost::strerror(),
+                      ", fd: ", _pipe_fds[0]);
       break;
     }
   }

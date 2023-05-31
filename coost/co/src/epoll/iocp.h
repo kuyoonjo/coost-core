@@ -5,6 +5,7 @@
 #include "../sock_ctx.h"
 #include <coost/co/co.h>
 #include <coost/error.h>
+#include <coost/log.h>
 
 
 namespace coost {
@@ -26,7 +27,7 @@ public:
       ctx.add_event();
       return true;
     } else {
-      // ELOG << "iocp add socket " << fd << " error: " << co::strerror();
+      COOST_LOG_ERROR( "iocp add socket " , fd , " error: " , coost::strerror());
       // always return true here.
       return true;
     }
@@ -68,7 +69,7 @@ public:
       const BOOL r = PostQueuedCompletionStatus(_iocp, 0, 0, 0);
       if (!r) {
         const uint32_t e = ::GetLastError();
-        // ELOG << "PostQueuedCompletionStatus error: " << co::strerror(e);
+        COOST_LOG_ERROR( "PostQueuedCompletionStatus error: " , coost::strerror(e));
       }
     }
   }

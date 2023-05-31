@@ -7,12 +7,13 @@ namespace co {
 
 Epoll::Epoll(int sched_id) : _signaled(0), _sched_id(sched_id) {
   _ep = epoll_create(1024);
-  // CHECK_NE(_ep, -1) << "epoll create error: " << co::strerror();
+  if (_ep == -1)
+    COOST_LOG_FATAL("epoll create error: ", coost::strerror());
   co::set_cloexec(_ep);
 
-  __sys_api(pipe)(_pipe_fds);
-  // CHECK_NE(__sys_api(pipe)(_pipe_fds), -1) << "create pipe error: " <<
-  // co::strerror();
+  auto r = __sys_api(pipe)(_pipe_fds);
+  if (r == -1)
+    COOST_LOG_FATAL("create pipe error: ", coost::strerror());
   co::set_cloexec(_pipe_fds[0]);
   co::set_cloexec(_pipe_fds[1]);
 
@@ -51,8 +52,8 @@ bool Epoll::add_ev_read(int fd, int32_t co_id) {
     ctx.add_ev_read(_sched_id, co_id);
     return true;
   } else {
-    // ELOG << "epoll add ev read error: " << co::strerror() << ", fd: " << fd
-    //      << ", co: " << co_id;
+    COOST_LOG_ERROR("epoll add ev read error: ", coost::strerror(),
+                    ", fd: ", fd, ", co: ", co_id);
     return false;
   }
 }
@@ -76,8 +77,8 @@ bool Epoll::add_ev_write(int fd, int32_t co_id) {
     ctx.add_ev_write(_sched_id, co_id);
     return true;
   } else {
-    // ELOG << "epoll add ev write error: " << co::strerror() << ", fd: " << fd
-    //      << ", co: " << co_id;
+    COOST_LOG_ERROR("epoll add ev write error: ", coost::strerror(),
+                    ", fd: ", fd, ", co: ", co_id);
     return false;
   }
 }
@@ -101,7 +102,8 @@ void Epoll::del_ev_read(int fd) {
   }
 
   if (r != 0 && errno != ENOENT) {
-    // ELOG << "epoll del ev_read error: " << co::strerror() << ", fd: " << fd;
+    COOST_LOG_ERROR("epoll del ev_read error: ", coost::strerror(),
+                    ", fd: ", fd);
   }
 }
 
@@ -124,7 +126,8 @@ void Epoll::del_ev_write(int fd) {
   }
 
   if (r != 0 && errno != ENOENT) {
-    // ELOG << "epoll del ev_write error: " << co::strerror() << ", fd: " << fd;
+    COOST_LOG_ERROR("epoll del ev_write error: ", coost::strerror(),
+                    ", fd: ", fd);
   }
 }
 
@@ -135,8 +138,9 @@ void Epoll::del_event(int fd) {
   if (ctx.has_event()) {
     ctx.del_event();
     const int r = epoll_ctl(_ep, EPOLL_CTL_DEL, fd, (epoll_event *)8);
-    // if (r != 0)
-    //   ELOG << "epoll del event error: " << co::strerror() << ", fd: " << fd;
+    if (r != 0)
+      COOST_LOG_ERROR("epoll del event error: ", coost::strerror(),
+                      ", fd: ", fd);
   }
 }
 
@@ -166,8 +170,8 @@ void Epoll::handle_ev_pipe() {
         break;
       if (errno == EINTR)
         continue;
-      //   ELOG << "pipe read error: " << co::strerror() << ", fd: " <<
-      //   _pipe_fds[0];
+      COOST_LOG_ERROR("pipe read error: ", coost::strerror(),
+                      ", fd: ", _pipe_fds[0]);
       break;
     }
   }

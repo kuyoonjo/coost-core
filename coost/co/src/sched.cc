@@ -117,7 +117,7 @@ void Sched::resume(Coroutine *co) {
     }
 
     // resume suspended coroutine
-    SCHEDLOG("resume co: ", co, " id: ",  co->id, " stack: ",co->buf.size());
+    SCHEDLOG("resume co: ", co, " id: ", co->id, " stack: ", co->buf.size());
     if (s->co != co) {
       this->save_stack(s->co);
       // CHECK_EQ(s->top, (char*)co->ctx + co->buf.size());
@@ -152,8 +152,8 @@ void Sched::loop() {
       break;
 
     if (unlikely(n == -1)) {
-      // if (coost::error() != EINTR) ELOG << "epoll wait error: " <<
-      // co::strerror();
+      if (coost::error() != EINTR)
+        COOST_LOG_FATAL("epoll wait error: ", coost::strerror());
       continue;
     }
 
@@ -416,31 +416,36 @@ int coroutine_id() {
 
 void add_timer(uint32_t ms) {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   s->add_timer(ms);
 }
 
 bool add_io_event(sock_t fd, _ev_t ev) {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   return s->add_io_event(fd, ev);
 }
 
 void del_io_event(sock_t fd, _ev_t ev) {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   return s->del_io_event(fd, ev);
 }
 
 void del_io_event(sock_t fd) {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   s->del_io_event(fd);
 }
 
 void yield() {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   s->yield();
 }
 
@@ -456,13 +461,15 @@ void sleep(uint32_t ms) {
 
 bool timeout() {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   return s && s->timeout();
 }
 
 bool on_stack(const void *p) {
   const auto s = xx::gSched;
-  // CHECK(s) << "MUST be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("MUST be called in coroutine..");
   return s->on_stack(p);
 }
 

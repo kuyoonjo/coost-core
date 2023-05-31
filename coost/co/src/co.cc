@@ -169,7 +169,7 @@ public:
 
     _memb *_make_memb() {
       _memb *m = (_memb *)mem::alloc(sizeof(_memb) + N * sizeof(void *),
-                                    mem::cache_line_size);
+                                     mem::cache_line_size);
       m->size = 0;
       m->rx = 0;
       m->wx = 0;
@@ -588,7 +588,7 @@ private:
   void _write_block(void *p, int v);
 
 private:
-  char *_buf;       // buffer
+  char *_buf;         // buffer
   uint32_t _buf_size; // buffer size
   uint32_t _blk_size; // block size
   uint32_t _ms;       // timeout in milliseconds
@@ -640,7 +640,7 @@ void pipe_impl::read(void *p) {
     while (!_wq.empty()) {
       waitx *w = (waitx *)_wq.pop_front(); // wait for write
       if (_ms == (uint32_t)-1 || atomic_bool_cas(&w->state, st_wait, st_ready,
-                                               mo_relaxed, mo_relaxed)) {
+                                                 mo_relaxed, mo_relaxed)) {
         this->_write_block(w->buf, w->x.v & 1);
         if (w->x.v & 2)
           _d(w->buf);
@@ -762,7 +762,7 @@ void pipe_impl::write(void *p, int v) {
     while (!_wq.empty()) {
       waitx *w = (waitx *)_wq.pop_front(); // wait for read
       if (_ms == (uint32_t)-1 || atomic_bool_cas(&w->state, st_wait, st_ready,
-                                               mo_relaxed, mo_relaxed)) {
+                                                 mo_relaxed, mo_relaxed)) {
         w->x.done = 1;
         if (w->co) {
           if (w->x.v & 2)
@@ -960,7 +960,8 @@ private:
 
 inline void *pool_impl::pop() {
   auto s = gSched;
-  // CHECK(s) << "must be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("must be called in coroutine..");
   auto &v = _pools[s->id()];
   return !v.empty() ? v.pop_back() : (_ccb ? _ccb() : nullptr);
 }
@@ -968,7 +969,8 @@ inline void *pool_impl::pop() {
 inline void pool_impl::push(void *p) {
   if (p) {
     auto s = gSched;
-    // CHECK(s) << "must be called in coroutine..";
+    if (!s)
+      COOST_LOG_FATAL("must be called in coroutine..");
     auto &v = _pools[s->id()];
     (v.size() < _maxcap || !_dcb) ? v.push_back(p) : _dcb(p);
   }
@@ -1004,7 +1006,8 @@ void pool_impl::clear() {
 
 inline size_t pool_impl::size() const {
   auto s = gSched;
-  // CHECK(s) << "must be called in coroutine..";
+  if (!s)
+    COOST_LOG_FATAL("must be called in coroutine..");
   return _pools[s->id()].size();
 }
 
