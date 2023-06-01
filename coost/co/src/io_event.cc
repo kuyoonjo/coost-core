@@ -41,7 +41,8 @@ io_event::io_event(sock_t fd, _ev_t ev)
       _timeout(false) {
   const auto sched = xx::gSched;
   sched->add_io_event(fd, ev); // add socket to IOCP
-  _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo), coost::mem::cache_line_size);
+  _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo),
+                                         coost::mem::cache_line_size);
   memset(_info, 0, sizeof(PerIoInfo));
   _info->mlen = sizeof(PerIoInfo);
   _info->co = (void *)sched->running();
@@ -52,7 +53,8 @@ io_event::io_event(sock_t fd, int n)
     : _fd(fd), _to(0), _nb_tcp(0), _timeout(false) {
   const auto sched = xx::gSched;
   sched->add_io_event(fd, ev_read); // add socket to IOCP
-  _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo) + n, coost::mem::cache_line_size);
+  _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo) + n,
+                                         coost::mem::cache_line_size);
   memset(_info, 0, sizeof(PerIoInfo) + n);
   _info->mlen = sizeof(PerIoInfo) + n;
   _info->co = (void *)sched->running();
@@ -64,7 +66,8 @@ io_event::io_event(sock_t fd, _ev_t ev, const void *buf, int size, int n)
   const auto sched = xx::gSched;
   sched->add_io_event(fd, ev);
   if (!sched->on_stack(buf)) {
-    _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo) + n, coost::mem::cache_line_size);
+    _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo) + n,
+                                           coost::mem::cache_line_size);
     memset(_info, 0, sizeof(PerIoInfo) + n);
     _info->mlen = sizeof(PerIoInfo) + n;
     _info->co = (void *)sched->running();
@@ -72,7 +75,7 @@ io_event::io_event(sock_t fd, _ev_t ev, const void *buf, int size, int n)
     _info->buf.len = size;
   } else {
     _info = (PerIoInfo *)coost::mem::alloc(sizeof(PerIoInfo) + n + size,
-                                   coost::mem::cache_line_size);
+                                           coost::mem::cache_line_size);
     memset(_info, 0, sizeof(PerIoInfo) + n);
     _info->mlen = sizeof(PerIoInfo) + n + size;
     _info->co = (void *)sched->running();
@@ -99,6 +102,7 @@ io_event::~io_event() {
 bool io_event::wait(uint32_t ms) {
   int r, e;
   const auto sched = xx::gSched;
+  _info->state = xx::st_wait;
 
   // If fd is a non-blocking TCP socket, we post the I/O operation to IOCP using
   // WSARecv or WSASend. Since _info->buf is empty, no data will be transfered,
