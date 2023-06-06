@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coost/fastring.h>
+#include <string>
 
 namespace coost {
 namespace time {
@@ -16,7 +16,7 @@ int64_t us();
 int64_t ms();
 
 // "%Y-%m-%d %H:%M:%S" ==> 2023-01-07 18:01:23
-fastring str(const char *fm = "%Y-%m-%d %H:%M:%S");
+std::string str(const char *fm = "%Y-%m-%d %H:%M:%S");
 
 } // namespace now
 

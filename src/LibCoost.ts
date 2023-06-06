@@ -146,7 +146,6 @@ export namespace LibCoost {
           )
         ),
       ];
-      Fast.config(llvm);
     }
   }
 
@@ -170,7 +169,8 @@ export namespace LibCoost {
           )
         ),
       ];
-      Fast.config(llvm);
+      Macro.config(llvm);
+      God.config(llvm);
     }
   }
 

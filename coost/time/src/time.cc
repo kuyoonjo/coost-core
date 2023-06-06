@@ -50,14 +50,14 @@ int64_t us() { return xx::us(); }
 
 int64_t ms() { return xx::ms(); }
 
-fastring str(const char *fm) {
+std::string str(const char *fm) {
   time_t x = ::time(0);
   struct tm t;
   localtime_r(&x, &t);
 
   char buf[256];
   const size_t r = strftime(buf, sizeof(buf), fm, &t);
-  return fastring(buf, r);
+  return std::string(buf, buf + r);
 }
 
 } // namespace now
