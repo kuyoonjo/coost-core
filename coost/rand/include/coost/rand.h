@@ -1,6 +1,9 @@
 #pragma once
 
-#include <coost/fastring.h>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace coost {
 
@@ -19,12 +22,19 @@ inline uint32_t rand(uint32_t &seed) {
 
 // return a random string with default symbols (thread-safe)
 // - @n: length of the random string (>0), 15 by default
-fastring randstr(int n = 15);
+std::string randstr(int n = 15);
 
 // return a random string with specific symbols (thread-safe)
 // - @s: a null-terminated string stores the symbols to be used,
 //       2 <= strlen(s) <= 255, otherwise return an empty string.
 // - @n: length of the random string, n > 0
-fastring randstr(const char *s, int n);
+std::string randstr(const char *s, int n);
+
+std::vector<uint8_t> rand_bytes(int n);
+uint64_t rand_u64_id();
+std::string rand_short_id();
+
+std::string to_short_id(uint64_t id);
+uint64_t to_u64_id(const std::string& short_id);
 
 } // namespace coost
