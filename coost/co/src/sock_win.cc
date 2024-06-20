@@ -396,7 +396,7 @@ void set_nonblock(sock_t fd) {
 
 bool _can_skip_iocp_on_success() {
   int protos[] = {IPPROTO_TCP, IPPROTO_UDP, 0};
-  fastring s;
+  std::string s;
   LPWSAPROTOCOL_INFOW proto_info = 0;
   DWORD buf_len = 0;
   int err = 0, ntry = 0;

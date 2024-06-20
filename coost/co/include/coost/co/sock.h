@@ -2,7 +2,8 @@
 
 #include "./byte_order.h"
 #include <coost/error.h>
-#include <coost/fastring.h>
+#include <string>
+#include <cstring>
 
 #ifdef _WIN32
 #include <MSWSock.h>
@@ -377,57 +378,17 @@ inline bool init_ip_addr(struct sockaddr_in6 *addr, const char *ip, int port) {
 }
 
 // get ip string of an ipv4 address
-inline fastring ip_str(const struct sockaddr_in *addr) {
+inline std::string ip_str(const struct sockaddr_in *addr) {
   char s[INET_ADDRSTRLEN] = {0};
   inet_ntop(AF_INET, (void *)&addr->sin_addr, s, sizeof(s));
-  return fastring(s);
+  return std::string(s);
 }
 
 // get ip string of an ipv6 address
-inline fastring ip_str(const struct sockaddr_in6 *addr) {
+inline std::string ip_str(const struct sockaddr_in6 *addr) {
   char s[INET6_ADDRSTRLEN] = {0};
   inet_ntop(AF_INET6, (void *)&addr->sin6_addr, s, sizeof(s));
-  return fastring(s);
-}
-
-/**
- * convert an ipv4 address to a string
- *
- * @return  a string in format "ip:port"
- */
-inline fastring to_string(const struct sockaddr_in *addr) {
-  char s[INET_ADDRSTRLEN] = {0};
-  inet_ntop(AF_INET, (void *)&addr->sin_addr, s, sizeof(s));
-  const size_t n = strlen(s);
-  fastring r(n + 8);
-  r.append(s, n).append(':') << ntoh16(addr->sin_port);
-  return r;
-}
-
-/**
- * convert an ipv6 address to a string
- *
- * @return  a string in format: "ip:port"
- */
-inline fastring to_string(const struct sockaddr_in6 *addr) {
-  char s[INET6_ADDRSTRLEN] = {0};
-  inet_ntop(AF_INET6, (void *)&addr->sin6_addr, s, sizeof(s));
-  const size_t n = strlen(s);
-  fastring r(n + 8);
-  r.append(s, n).append(':') << ntoh16(addr->sin6_port);
-  return r;
-}
-
-/**
- * convert an ip address to a string
- *
- * @param addr  a pointer to struct sockaddr.
- * @param len   length of the addr, sizeof(sockaddr_in) or sizeof(sockaddr_in6).
- */
-inline fastring to_string(const void *addr, int len) {
-  if (len == sizeof(sockaddr_in))
-    return to_string((const sockaddr_in *)addr);
-  return to_string((const struct sockaddr_in6 *)addr);
+  return std::string(s);
 }
 
 /**
@@ -435,21 +396,21 @@ inline fastring to_string(const void *addr, int len) {
  *
  * @return  a string in format: "ip:port", or an empty string on error.
  */
-inline fastring peer(sock_t fd) {
-  union {
-    struct sockaddr_in v4;
-    struct sockaddr_in6 v6;
-  } addr;
-  int addrlen = sizeof(addr);
-  const int r = getpeername(fd, (sockaddr *)&addr, (socklen_t *)&addrlen);
-  if (r == 0) {
-    if (addrlen == sizeof(addr.v4))
-      return co::to_string(&addr.v4);
-    if (addrlen == sizeof(addr.v6))
-      return co::to_string(&addr.v6);
-  }
-  return fastring();
-}
+// inline std::string peer(sock_t fd) {
+//   union {
+//     struct sockaddr_in v4;
+//     struct sockaddr_in6 v6;
+//   } addr;
+//   int addrlen = sizeof(addr);
+//   const int r = getpeername(fd, (sockaddr *)&addr, (socklen_t *)&addrlen);
+//   if (r == 0) {
+//     if (addrlen == sizeof(addr.v4))
+//       return co::to_string(&addr.v4);
+//     if (addrlen == sizeof(addr.v6))
+//       return co::to_string(&addr.v6);
+//   }
+//   return std::string();
+// }
 
 } // namespace co
 } // namespace coost

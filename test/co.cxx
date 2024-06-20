@@ -18,5 +18,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < 10; ++i) {
     COOST_ATOMIC_EVERY(3) coost::println("COOST_EVERY", i);
   }
+
+  coost::co::sleep(100000);
   return 0;
 }
